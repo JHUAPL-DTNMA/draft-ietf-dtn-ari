@@ -128,7 +128,7 @@ start = ari
 From the document <xref target="RFC3986"/> the definitions are taken for <tt>pchar</tt>, <tt>unreserved</tt>, <tt>pct-encoded</tt>.
 From the document <xref target="RFC3339"/> the definitions are taken for <tt>date-time</tt>, <tt>full-date</tt>, and <tt>duration</tt>.
 From the document <xref target="RFC5234"/> the definitions are taken for <tt>bit</tt>, <tt>hexdig</tt>, <tt>digit</tt>, and <tt>char-val</tt>.
-From the document <xref target="RFC8259"/> the definitions are taken for <tt>char</tt> and <tt>unescaped</tt>.
+From the document <xref target="RFC8259"/> the definition is taken for the rule <tt>char</tt> as <tt>json-char</tt> (due to a name collision <xref target="EID7650"/>.
         </t>
       </section>
       <section>
@@ -180,7 +180,7 @@ The terms "Application Data Model", "Application Resource Identifier", "Operatio
         </t>
       </section>
     </section>
-    <section  anchor="sec-ari-purpose">
+    <section anchor="sec-ari-purpose">
       <name>ARI Purpose</name>
       <t>
 AMM resources (contained within ADM and ODM namespaces) are referenced in the context of autonomous applications on an agent.
@@ -964,8 +964,7 @@ As an alternative, if the text value matches the <tt>id-text</tt> character set 
               <sourcecode type="abnf">
 tstr = tstr-quoted / id-text
 ; double-quoted and escaped text logic from Section 7 of RFC 8259
-tstr-quoted = DQUOTE *char DQUOTE
-DQUOTE = %x22
+tstr-quoted = DQUOTE *json-char DQUOTE
               </sourcecode>
               <t>
 The canonical percent encoded form for a text string <bcp14>SHALL</bcp14> treat only the <tt>unreserved</tt> characters and "'" as safe.
@@ -980,7 +979,7 @@ The byte string type matches the following <tt>bstr</tt> ABNF rule after percent
               <sourcecode type="abnf">
 bstr = bstr-utf8 / bstr-b16 / bstr-b64
 ; Escaped text logic from Section 7 of RFC 8259
-bstr-utf8 = SQUOTE *char SQUOTE
+bstr-utf8 = SQUOTE *json-char SQUOTE
 ; Encoding of Section 8 of RFC 4648
 bstr-b16 = "h" SQUOTE *(2HEXDIG) SQUOTE
 ; Encoding of Section 5 of RFC 4648
@@ -1619,9 +1618,9 @@ Processors will treat either form the same if they support the associated built-
 $lit-typeval /= [16, lit-label]
             </sourcecode>
           </dd>
-            <dt anchor="dt-literal-binary-objpat"><tt>OBJPAT</tt>:</dt>
-            <dd>
-              <t>
+          <dt anchor="dt-literal-binary-objpat"><tt>OBJPAT</tt>:</dt>
+          <dd>
+            <t>
 This type uses the following plug for its value to match sets of objects using each of their identifiers as described in <xref target="sec-struct-objpat"/>.
 The range encoding uses a compressed form of interval logic to encode the least included value and only the widths of each subsequent included and excluded interval.
             </t>
@@ -2865,6 +2864,13 @@ The registration procedure for this registry is standards action because these m
         <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8820.xml"/>
         <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.9675.xml"/>
         <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-dtn-amp.xml"/>
+        <reference anchor="EID7650" target="https://errata.rfc-editor.org/eid7650/">
+          <front>
+            <title>RFC Errata 7650</title>
+            <author fullname="Lucas Tesson"/>
+            <date year="2023" month="9" day="20"/>
+          </front>
+        </reference>
         <reference anchor="github-dtnma-ace" target="https://github.com/JHUAPL-DTNMA/dtnma-ace">
           <front>
             <title>The DTNMA AMM CODEC Engine (ACE)</title>
