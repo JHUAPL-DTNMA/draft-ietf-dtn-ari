@@ -1,0 +1,3456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<?rfc strict="yes" ?>
+<?rfc toc="yes"?>
+<!-- generate a ToC -->
+<?rfc symrefs="yes"?>
+<!-- use symbolic references tags, i.e, [RFC2119] instead of [1] -->
+<?rfc sortrefs="yes" ?>
+<!-- sort the reference entries alphabetically -->
+<?rfc compact="no" ?>
+<!-- do not start each main section on a new page -->
+<?rfc subcompact="no" ?>
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude" category="std" consensus="true" docName="draft-ietf-dtn-ari-09" ipr="trust200902" submissionType="IETF" symRefs="true" tocInclude="true" version="3" xml:lang="en">
+  <front>
+    <title abbrev="DTNMA ARI">DTNMA Application Resource Identifier (ARI)</title>
+    <seriesInfo name="Internet-Draft" value="draft-ietf-dtn-ari-09"/>
+    <author fullname="Edward J. Birrane, III" initials="E.J." surname="Birrane">
+      <organization abbrev="JHU/APL">The Johns Hopkins University Applied Physics Laboratory</organization>
+      <address>
+        <postal>
+          <street>11100 Johns Hopkins Rd.</street>
+          <city>Laurel</city>
+          <region>MD</region>
+          <code>20723</code>
+          <country>United States of America</country>
+        </postal>
+        <phone>+1 443 778 7423</phone>
+        <email>Edward.Birrane@jhuapl.edu</email>
+      </address>
+    </author>
+    <author fullname="Emery Annis" initials="E.A." surname="Annis">
+      <organization abbrev="JHU/APL">The Johns Hopkins University Applied Physics Laboratory</organization>
+      <address>
+        <email>Emery.Annis@jhuapl.edu</email>
+      </address>
+    </author>
+    <author fullname="Brian Sipos" initials="B." surname="Sipos">
+      <organization abbrev="JHU/APL">The Johns Hopkins University Applied Physics Laboratory</organization>
+      <address>
+        <email>brian.sipos+ietf@gmail.com</email>
+      </address>
+    </author>
+    <date/>
+    <area>Transport</area>
+    <workgroup>Delay-Tolerant Networking</workgroup>
+    <keyword>DTN</keyword>
+    <keyword>Network Management</keyword>
+    <abstract>
+      <t>
+This document defines the structure, format, and features of the naming scheme for the objects defined in the Delay-Tolerant Networking Management Architecture (DTNMA) Application Management Model (AMM), in support of challenged network management solutions described in the DTNMA document.
+      </t>
+      <t>
+This document defines the DTNMA Application Resource Identifier (ARI), using a text-form based on the common Uniform Resource Identifier (URI) and a binary-form based on Concise Binary Object Representation (CBOR).
+These meet the needs for a concise, typed, parameterized, and hierarchically organized set of managed data elements.
+      </t>
+    </abstract>
+  </front>
+  <middle>
+    <section>
+      <name>Introduction</name>
+      <t>
+The unique limitations of Delay-Tolerant Networking (DTN) transport capabilities <xref target="RFC4838"/> necessitate increased reliance on individual node behavior.
+These limitations are considered part of the expected operational environment of the system and, thus, contemporaneous end-to-end data exchange cannot be considered a requirement for successful communication.
+      </t>
+      <t>
+The primary DTN transport mechanism, Bundle Protocol version 7 (BPv7) <xref target="RFC9171"/>, standardizes a store-and-forward behavior required to communicate effectively between endpoints that may never co-exist in a single network partition.
+BPv7 might be deployed in static environments, but the design and operation of BPv7 cannot presume that to be the case.
+      </t>
+      <t>
+Similarly, the management of any BPv7 protocol agent (BPA) (or any software reliant upon DTN for its communication) cannot presume to operate in a resourced, connected network.
+Just as DTN transport must be delay-tolerant, DTN network management must also be delay-tolerant.
+      </t>
+      <t>
+The DTN Management Architecture (DTNMA) <xref target="RFC9675"/> outlines an architecture that achieves this result through the self-management of a DTN node as configured by one or more remote managers in an asynchronous and open-loop system.
+An important part of this architecture is the definition of a conceptual data schema for defining resources configured by remote managers and implemented by the local autonomy of a DTN node.
+      </t>
+      <t>
+The DTNMA Application Management Model (AMM) <xref target="I-D.ietf-dtn-amm"/> defines a logical schema that can be used to represent data types and structures, autonomous controls, and other kinds of information expected to be required for the local management of a DTN node.
+The AMM further describes a physical data model, called the Application Data Model (ADM), that can be defined in the context of applications to create resources in accordance with the AMM schema.
+These named resources can be predefined in moderated publications or custom-defined as part of the Operational Data Model (ODM) of an agent.
+      </t>
+      <t>
+Every AMM resource must be uniquely identifiable.
+To accomplish this, an expressive naming scheme is required.
+The Application Resource Identifier (ARI) provides this naming scheme.
+This document defines the ARI, based on the structure of a Uniform Resource Identifier (URI) of <xref target="RFC3986"/>, meeting the needs for a concise, typed, parameterized, and hierarchically organized naming convention.
+Additionally, a binary form of ARI encoding based on Concise Binary Object Representation (CBOR) of <xref target="RFC8949"/> is defined for more compact interchange of the same information.
+      </t>
+      <section>
+        <name>Scope</name>
+        <t>
+The ARI scheme is based on the structure of a URI <xref target="RFC3986"/> in accordance with the practices outlined in <xref target="RFC8820"/>.
+        </t>
+        <t>
+ARIs are designed to support the identification requirements of the AMM logical schema.
+As such, this specification will discuss these requirements to the extent necessary to explain the structure and use of the ARI syntax. 
+        </t>
+        <t>
+This specification does not constrain the syntax or structure of any existing URI (or part thereof).
+As such, the ARI scheme does not impede the ownership of any other URI scheme and is therefore clear of the concerns presented in <xref target="RFC7320"/>. 
+        </t>
+        <t>
+This specification does not discuss the manner in which ARIs might be generated, populated, and used by applications.
+The operational utility and configuration of ARIs in a system are described in other documents associated with DTN management, to include the DTNMA and AMM specifications.
+        </t>
+        <t>
+This specification does not describe the way in which path prefixes associated with an ARI are standardized, moderated, or otherwise populated.
+Path suffixes may be specified where they do not lead to collision or ambiguity. 
+        </t>
+        <t>
+This specification does not describe the mechanisms for generating either standardized or custom ARIs in the context of any given application, protocol, or network.
+        </t>
+      </section>
+      <section>
+        <name>Use of ABNF</name>
+        <t>
+This document defines text structure using the Augmented Backus-Naur Form (ABNF) of <xref target="RFC5234"/>.
+The entire ABNF structure can be extracted from the XML version of this document using the XPath expression:
+        </t>
+        <sourcecode>'//sourcecode[@type="abnf"]'</sourcecode>
+        <t>
+The following initial fragment defines the top-level rules of this document's ABNF.
+        </t>
+        <sourcecode type="abnf">
+start = ari
+        </sourcecode>
+        <t>
+From the document <xref target="RFC3986"/> the definitions are taken for <tt>pchar</tt>, <tt>unreserved</tt>, <tt>pct-encoded</tt>.
+From the document <xref target="RFC3339"/> the definitions are taken for <tt>date-time</tt>, <tt>full-date</tt>, and <tt>duration</tt>.
+From the document <xref target="RFC5234"/> the definitions are taken for <tt>bit</tt>, <tt>hexdig</tt>, <tt>digit</tt>, and <tt>char-val</tt>.
+From the document <xref target="RFC8259"/> the definitions are taken for <tt>char</tt> and <tt>unescaped</tt>.
+        </t>
+      </section>
+      <section>
+        <name>Use of CDDL</name>
+        <t>
+This document defines CBOR structure using the Concise Data Definition Language (CDDL) of <xref target="RFC8610"/>.
+The entire CDDL structure can be extracted from the XML version of this document using the XPath expression:
+        </t>
+        <sourcecode>'//sourcecode[@type="cddl"]'</sourcecode>
+        <t>
+The following initial fragment defines the top-level rules of this document's CDDL, which includes the example CBOR content.
+        </t>
+        <sourcecode type="cddl">
+start = ari
+
+; Limited sizes to fit the AMM data model
+int32 = (-2147483648 .. 2147483647) .within int
+uint32 = uint .le 4294967295
+int64 = (-9223372036854775808 .. 9223372036854775807) .within int
+uint64 = uint
+
+; Restricted identifier text
+id-text = tstr .regexp "!?[A-Za-z_][A-Za-z0-9_\\-\\.]*"
+; Restricted identifier enumerations
+id-int = int32
+        </sourcecode>
+        <t>
+This document does not rely on any CDDL symbol names from other documents.
+        </t>
+      </section>
+      <section anchor="sec-intro-linefold">
+        <name>Example ARI Line Folding</name>
+        <t>
+The URI encoding of <xref target="sec-text-form"/> does not allow blank space characters and some of the example ARIs are longer than RFC recommended line lengths, the examples uses the "single backslash" folding strategy of <xref section="7" target="RFC8792"/> for line wrapping.
+The header from that strategy is not used explicitly in this document, so any use of indentation in example ARIs will make use of this folding strategy.
+        </t>
+      </section>
+      <section>
+        <name>Terminology</name>
+        <t>
+The key words "<bcp14>MUST</bcp14>", "<bcp14>MUST NOT</bcp14>", "<bcp14>REQUIRED</bcp14>", "<bcp14>SHALL</bcp14>", "<bcp14>SHALL NOT</bcp14>",
+"<bcp14>SHOULD</bcp14>", "<bcp14>SHOULD NOT</bcp14>", "<bcp14>RECOMMENDED</bcp14>", "<bcp14>MAY</bcp14>", and "<bcp14>OPTIONAL</bcp14>" in this
+document are to be interpreted as described in BCP 14 <xref target="RFC2119"/>
+<xref target="RFC8174"/> when, and only when, they appear in all capitals,
+as shown here.
+        </t>
+        <t>
+The terms "Application Data Model", "Application Resource Identifier", "Operational Data Model", "Externally Defined Data", "Variable", "Constant", "Control", "Literal", "Namespace", "Operator", "Report", "State-Based Rule", "Table", and "Time-Based Rule" are used without modification from the definitions provided in <xref target="I-D.ietf-dtn-amm"/>.
+        </t>
+      </section>
+    </section>
+    <section  anchor="sec-ari-purpose">
+      <name>ARI Purpose</name>
+      <t>
+AMM resources (contained within ADM and ODM namespaces) are referenced in the context of autonomous applications on an agent.
+The naming scheme of these resources must support certain features to inform DTNMA processing in accordance with the ADM logical schema.
+      </t>
+      <t>
+This section defines the set of unique characteristics of the logical ARI scheme, the combination of which provides a unique utility for naming.
+While certain other naming schemes might incorporate certain elements, there are no such schemes that both support needed features and exclude prohibited features.
+      </t>
+      <section>
+        <name>Resource Parameterization</name>
+        <t>
+The ADM schema allows for the parameterization of resources to both reduce the overall data volume communicated between DTN nodes and to remove the need for any round-trip data negotiation.
+        </t>
+        <t>
+Parameterization reduces the communicated data volume when parameters are used as filter criteria.
+By associating a parameter with a data source, data characteristic, or other differentiating attribute, DTN nodes can locally process parameters to construct the minimal set of information to either process for local autonomy or report to remote managers in the network.
+        </t>
+        <t>
+Parameterization eliminates the need for round-trip negotiation to identify where information is located or how it should be accessed.
+When parameters define the ability to perform an associative lookup of a value, the index or location of the data at a particular DTN node can be resolved locally as part of the local autonomy of the node and not communicated back to a remote manager.
+        </t>
+      </section>
+      <section>
+        <name>Compressible Structure</name>
+        <t>
+The ability to encode information in very concise formats enables DTN communications in a variety of ways.
+Reduced message sizes increase the likelihood of message delivery, require fewer processing resources to secure, store, and forward, and require less resources to transmit. 
+        </t>
+        <t>
+The ARI syntax supports the following design elements to aid in the creation of more concise encodings: fixed-depth of hierarchy, enumerated forms of path segments, relative paths, and patterning. 
+For example, the <xref target="sec-binary-form">binary form of ARI</xref> supports the ability to identify objects in as few as 5 bytes and the ability to contain specific primitive values in as few as a single byte.
+        </t>
+        <section>
+          <name>Enumerated Path Segments</name>
+          <t>
+Because the ARI structure includes paths segments with stable enumerated identifiers, each segment can be represented by either its text name or its integer enumeration.
+For human-readability in text form the text name is preferred, but for binary encoding and for comparisons the integer form is preferred.
+It is a translation done by the entity handling an ARI to switch between preferred representations (see <xref target="sec-transcoding"/>); the data model of both forms of the ARI allows for either.
+          </t>
+        </section>
+        <section>
+          <name>Relative Paths</name>
+          <t>
+Within an ARI, as defined in <xref target="sec-ari-structure"/>, literal values require no external context to interpret an so have no use for relative paths.
+Object reference values, however, always refer to an object within an ADM or ODM namespace and this namespace can be used as a base for resolving URI References as discussed in <xref target="sec-text-reference"/> and <xref target="sec-binary-reference"/>.
+          </t>
+        </section>
+        <section anchor="sec-ari-purpose-patterning">
+          <name>Patterning</name>
+          <t>
+Patterning in this context refers to the structuring of ARI information to allow defining value-matching logic as a function of wildcards and other expressions of general structure.
+Patterns allow for both better compression and fewer ARI representations by allowing a single ARI pattern to stand-in for a variety of actual ARI values.
+          </t>
+          <t>
+This benefit is best achieved when the structure of the ARI is both expressive enough to include information that is useful to pattern match, and regular enough to understand how to create these patterns.
+A concrete definition for logic of and encodings for object reference patterns is defined in <xref target="sec-struct-objpat"/>.
+          </t>
+        </section>
+      </section>
+    </section>
+    <section anchor="sec-ari-structure">
+      <name>ARI Logical Structure</name>
+      <t>
+        This section describes the information model of the ARI scheme to inform the discussion of the ARI syntax in <xref target="sec-text-form"/> and <xref target="sec-binary-form"/>.
+        At the top-level, an ARI represents one of of the following AMM value classes defined in later subsections.
+      </t>
+      <dl>
+        <dt>Literal values:</dt>
+        <dd>These are values are those whose value and identifier are equivalent and are discussed in more detail in <xref target="sec-struct-literal"/>.</dd>
+        <dt>Object Reference values:</dt>
+        <dd>These values refer to an individual object, possibly with parameters, and are discussed in <xref target="sec-struct-objref"/>.</dd>
+        <dt>Namespace Reference values:</dt>
+        <dd>These values refer to an individual namespace and are discussed in <xref target="sec-struct-nsref"/>.</dd>
+      </dl>
+      <section anchor="sec-struct-names">
+        <name>Names, Enumerations, Comparisons, and Canonicalizations</name>
+        <t>
+          Within the ARI logical model, there are a number of domains in which items are identified by a combination of text name and integer enumeration: ADMs, ODMs, literal types, object types, and objects.
+          In all cases, within a single domain the text name and integer enumeration <bcp14>SHALL NOT</bcp14> be considered comparable.
+          It is an explicit activity by any entity processing ARIs to make the translation between text name and integer enumeration (see <xref target="sec-transcoding"/>).
+        </t>
+        <t>
+          Text names <bcp14>SHALL</bcp14> be restricted to begin with an alphabetic character followed by any number of other characters, as defined in the <tt>id-text</tt> ABNF rule.
+          This excludes a large class of characters, including non-printing characters.
+          When represented in text form, the text name for ODMs is prefixed with a "!" character to disambiguate it from an ADM name (see <xref target="sec-struct-objref"/>).
+        </t>
+        <t>
+          For text names, comparison and uniqueness <bcp14>SHALL</bcp14> be based on case-insensitive logic.
+          The canonical form of text names <bcp14>SHALL</bcp14> be the lower case representation.
+        </t>
+        <t>
+          Integer enumerations for ADMs and ODMs <bcp14>SHALL</bcp14> be restricted to a magnitude less than 2**63 to allow them to fit within a signed 64-bit storage.
+          The ADM registration in <xref target="tab-iana-dtnma-ietf-adms"/> reserves high-valued code points for private and experimental ADMs, while the entire domain of ODM code points (negative integers) is considered private use.
+          Integer enumerations for literal types and object types <bcp14>SHALL</bcp14> be restricted to a magnitude less than 2**31 to allow them to fit within a signed 32-bit storage.
+          The registrations in <xref target="tab-iana-dtnma-literal-types"/> and <xref target="tab-iana-dtnma-object-types"/> respectively
+          Integer enumerations for objects (within an ADM or ODM) <bcp14>SHALL</bcp14> be restricted to a magnitude less than 2**31 to allow them to fit within a signed 32-bit storage, although negative-value object enumerations are disallowed.
+        </t>
+        <t>
+          For integer enumerations, comparison and uniqueness <bcp14>SHALL</bcp14> be based on numeric values not on encoded forms.
+          The canonical form of integer enumerations in text form <bcp14>SHALL</bcp14> be the shortest length decimal representation.
+        </t>
+      </section>
+      <section anchor="sec-struct-literal">
+        <name>Literals</name>
+        <t>
+          Literals represent a special class of ARI which are not associated with any particular ADM or ODM.
+          A literal has no other name other than its value, but literals may be explicitly typed in order to force the receiver to handle it in a specific way.
+        </t>
+        <t>
+          Because literals will be based on the CBOR data model <xref target="RFC8949"/> and its extended diagnostic notation, a literal has an intrinsic representable data type as well as an AMM data type.
+          The CBOR primitive types are named CDDL rules as defined in <xref section="3.3" target="RFC8610"/>.
+        </t>
+        <t>
+          When converting from AMM literal types, the chosen CBOR type <bcp14>SHALL</bcp14> be determined by the mapping in <xref target="tab-ari-literal-types"/>.
+          Additionally, when handling typed literal ARIs any combination of AMM literal type and CBOR primitive type not in <xref target="tab-ari-literal-types"/> <bcp14>SHALL</bcp14> be considered invalid.
+          This restriction is enforced by the CDDL defined in <xref target="sec-binary-form"/>.
+          Additionally, when handling a literal of AMM type <tt>CBOR</tt> the well-formed-ness of the CBOR contained <bcp14>SHOULD</bcp14> be verified before the literal is treated as valid.
+        </t>
+        <table align="center" anchor="tab-ari-literal-types">
+          <name>AMM Literal Types to CBOR Types</name>
+          <thead>
+            <tr>
+              <th>AMM Literal Type</th>
+              <th>Used CBOR Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <tt>NULL</tt>
+              </td>
+              <td>
+                <tt>null</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>BOOL</tt>
+              </td>
+              <td>
+                <tt>bool</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>BYTE</tt>
+              </td>
+              <td>
+                <tt>uint</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>INT</tt>
+              </td>
+              <td>
+                <tt>int</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>UINT</tt>
+              </td>
+              <td>
+                <tt>uint</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>VAST</tt>
+              </td>
+              <td>
+                <tt>int</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>UVAST</tt>
+              </td>
+              <td>
+                <tt>uint</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>REAL32</tt>
+              </td>
+              <td>
+                <tt>float</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>REAL64</tt>
+              </td>
+              <td>
+                <tt>float</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>TEXTSTR</tt>
+              </td>
+              <td>
+                <tt>tstr</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>BYTESTR</tt>
+              </td>
+              <td>
+                <tt>bstr</tt>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="2">Non-primitive types</th>
+            </tr>
+            <tr>
+              <td>
+                <tt>TP</tt>
+              </td>
+              <td>
+                <tt>lit-time</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>TD</tt>
+              </td>
+              <td>
+                <tt>lit-time</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>LABEL</tt>
+              </td>
+              <td>
+                <tt>lit-label</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>CBOR</tt>
+              </td>
+              <td>
+                <tt>lit-cbor</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>ARITYPE</tt>
+              </td>
+              <td>
+                <tt>lit-label</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>OBJPAT</tt>
+              </td>
+              <td>
+                <tt>lit-objpat</tt>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="2">Containers</th>
+            </tr>
+            <tr>
+              <td>
+                <tt>AC</tt>
+              </td>
+              <td>
+                <tt>ari-collection</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>AM</tt>
+              </td>
+              <td>
+                <tt>ari-map</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>TBL</tt>
+              </td>
+              <td>
+                <tt>ari-tbl</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>EXECSET</tt>
+              </td>
+              <td>
+                <tt>exec-set</tt>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <tt>RPTSET</tt>
+              </td>
+              <td>
+                <tt>rpt-set</tt>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <t>
+The text forms of time point and difference values defined in <xref target="sec-text-lit-typed"/> allow both human-friendly representations (derived from <xref target="RFC3339"/> encodings) and direct numeric representation.
+The internal form of TP and TD values <bcp14>SHALL</bcp14> be as a decimal fraction supporting nanosecond precision.
+The internal form of TP and TD values <bcp14>SHALL</bcp14> be as a decimal fraction with a decimal mantissa large enough to hold a 64-bit signed integer (number of nanoseconds).
+        </t>
+        <t>
+For the CBOR type, an implementation <bcp14>MAY</bcp14> perform CBOR decoding to validate that the byte string value is in fact well-formed CBOR but <bcp14>SHALL</bcp14> preserve the original byte string when transforming between the internal form and different encoded forms.
+        </t>
+        <section anchor="sec-struct-objpat">
+          <name>Object Reference Patterns</name>
+          <t>
+One of the considerations discussed in <xref target="sec-ari-purpose-patterning"/> is the ability to construct patterns to match and group objects by their various parts of their identity.
+          </t>
+          <t>
+Although the logical structure of and encoded forms of Object Reference Patterns are similar to Object Reference values, they are different and they cannot be used interchangeably.
+The context used to interpret and match an pattern <bcp14>SHALL</bcp14> be explicit and separate from that used to interpret and dereference an Object Reference value.
+          </t>
+          <t>
+While an Object Reference value can be used to dereference to a specific managed object and invoke behavior on that object, an Object Reference Pattern is used solely to perform matching logic against specific objects.
+The potential for an Object Reference Pattern to match specific objects <bcp14>SHALL NOT</bcp14> be interpreted as the existence of such hypothetical objects or any possible references to those objects.
+          </t>
+          <t>
+As defined in the AMM, these patterns contain four separate parts (organization ID, model ID, object type, and object ID) and are used to match the four parts of an object path independently.
+Each part of the pattern contains one of the following to match the corresponding part of the object path:
+          </t>
+          <dl>
+            <dt>Single value:</dt>
+            <dd>
+This will match only a single identifier value as either integer enumeration or text name.
+            </dd>
+            <dt>Range:</dt>
+            <dd>
+This will match any identifier value contained in a disjoint set of integer intervals over the signed 32-bit domain.
+            </dd>
+            <dt>Wildcard:</dt>
+            <dd>
+This will match any possible identifier in that part.
+            </dd>
+          </dl>
+          <t>
+A diagram for logic and encoded fields of the range is shown in <xref target="fig-diag-int-range"/>.
+The text form of range encoding (<xref target="dt-literal-text-objpat"/>) contains only the "min" and "max" values from the included intervals; it elides the least minimum and largest maximum if they are the limits of the integer domain.
+The binary form of range encoding (<xref target="dt-literal-binary-objpat"/>) contains only the "least" value and the width of each subsequent included and excluded interval; it elides the least value and last included width if the intervals cover the limits of the domain.
+          </t>
+          <figure anchor="fig-diag-int-range">
+            <name>Integer Range Encoding</name>
+            <artwork align="center"><![CDATA[
+      _____(repeated)______
+     /                     \
+      Include       Exclude       Include
+   min       max min       max min       max    integer
+ <..|.........|...|.........|...|.........|..>  space
+    |         |   |         |   |         |
+    |<------->|<->|<------->|<->|<------->|
+   /   incl     1    excl     1    incl         binary
+least  width         width         width        fields
+]]></artwork>
+          </figure>
+          <t>
+The most simple finite range is a single value, for example the value 10 is text encoded as "10" and binary encoded (shown using EDN) as <tt>[10,0]</tt> (which is a special case because this can also use the non-range specific value encoding).
+The most simple disjoint range containing the values 2, 4, and 5 is text encoded as "2,4..5" and binary encoded as <tt>[2,0,0,1]</tt> because the first included interval is width zero, excluded interval is width zero, and last included interval is width 1.
+The largest possible range covering the entire 32-bit number space can be text encoded as "-2147483648..4294967295" and binary encoded as <tt>[-0x80000000,0xFFFFFFFF]</tt> or the more concise elided form of ".." and <tt>[null,null]</tt> respectively (and even this is a special case because this can also be represented by the wildcard value <tt>true</tt>, but that is a normalization decision not a coding one).
+          </t>
+        </section>
+      </section>
+      <section anchor="sec-struct-objref">
+        <name>Object References</name>
+        <t>
+Object references are composed of two parts: object identifier and optional parameters.
+The object identifier can be dereferenced to a specific object in the ADM/ODM, while the parameters provide additional information for certain types of object and only when allowed by the parameter "signature" from the ADM/ODM.
+        </t>
+        <t>
+The object identifier itself contains these components, described in the following subsections: organization ID, model ID with optional model revision, object type, and object ID.
+When encoded in text form (see <xref target="sec-text-form"/>), the identifier components correspond to the URI authority and path segments.
+        </t>
+        <t>
+Each identifier component has two possible forms; one more human-friendly and one more compressible.
+Values can only be converted between forms based on a local registry of data models.
+There is nothing intrinsic in either form which relates to the other form (<em>i.e.</em>, each name and enumeration value is arbitrary).
+        </t>
+        <dl>
+          <dt>Text name form:</dt>
+          <dd>
+            <t>
+This form corresponds with a human-readable identifier for the component.
+A text form component <bcp14>SHALL</bcp14> contain only URI path segment characters (<tt>pchar</tt>) representing valid UTF-8 text in accordance with <xref target="RFC3629"/>.
+This requirement applies to text components generally, specific component uses will restrict this valid domain further.
+            </t>
+            <t>
+There is no intrinsic limit to the length of a text form component.
+Implementations are <bcp14>RECOMMENDED</bcp14> to not impose an arbitrary small limit to text form components.
+            </t>
+          </dd>
+          <dt>Integer enumeration form:</dt>
+          <dd>
+This form corresponds with a compressible value suitable for on-the-wire encoding between Manager and Agent.
+Sorting and matching integer components is also faster than text form.
+Every integer form component <bcp14>SHALL</bcp14> be small enough to be represented as a 32-bit signed integer.
+          </dd>
+        </dl>
+        <t>
+An Agent implementation <bcp14>MAY</bcp14> be incapable of handling text form object identifier components, and this needs to be communicated to any associated Manager prior to encoding any ARIs for that Agent.
+        </t>
+        <t>
+The organization ID,  model ID, and model revision together are be referred to as a "namespace".
+ADM resources exist within namespaces to eliminate the possibility of a conflicting resource name, aid in the application of patterns, and improve the compressibility of the ARI.
+Namespaces <bcp14>SHALL NOT</bcp14> be used as a security mechanism to manage access.
+An Agent or Manager <bcp14>SHALL NOT</bcp14> infer security information or access control based solely on namespace information in an ARI.
+        </t>
+        <section anchor="sec-struct-objref-org-id">
+          <name>Organization ID</name>
+          <t>
+Organization IDs are used to segment the full domain of object identifiers into separately managed logical segments.
+Some organizations will be well known and registered with IANA, others will choose to make use of the private use reserved range for enumerations and names.
+This document allocates well known organization IDs in <xref target="sec-iana-dtnma"/> for the IETF and IANA, as well as for example models.
+          </t>
+          <dl>
+            <dt>Well Known organizations:</dt>
+            <dd>
+A well known organization ID <bcp14>SHALL</bcp14> be registered with IANA.
+All text form well known organization IDs <bcp14>SHALL</bcp14> match the <tt>id-text</tt> rule of <xref target="sec-uri-enc"/> and not begin with the bang character "!".
+All integer form well known organization IDs <bcp14>SHALL</bcp14> be non-negative.
+            </dd>
+            <dt>Private Use organizations:</dt>
+            <dd>
+A private use organization ID need not be registered with IANA.
+All text form private use organization IDs <bcp14>SHALL</bcp14> match the <tt>id-text</tt> rule and begin with the bang character "!".
+All integer form private use organization IDs <bcp14>SHALL</bcp14> be negative.
+            </dd>
+          </dl>
+        </section>
+        <section anchor="sec-struct-objref-model-id">
+          <name>Model ID</name>
+          <t>
+Model IDs are used to segment a full organizational domain into individual object namespaces.
+There are two types of model IDs corresponding to the two types of namespaces described in the AMM <xref section="3.1.3" target="I-D.ietf-dtn-amm"/> as follows.
+          </t>
+          <dl>
+            <dt>ADM namespace:</dt>
+            <dd>
+A model ID for an ADM namespace is unique within an organization and, except for private or experimental use, <bcp14>SHOULD</bcp14> be registered with IANA (see <xref target="sec-iana-dtnma"/>) or an organization-specific authority.
+All text form ADM model IDs <bcp14>SHALL</bcp14> match the <tt>id-text</tt> rule of <xref target="sec-uri-enc"/>and not begin with the bang character "!".
+All integer form ADM model IDs <bcp14>SHALL</bcp14> be non-negative.
+            </dd>
+            <dt>ODM namespace:</dt>
+            <dd>
+A model IDs for an ODM namespace does not have universal registration and <bcp14>SHALL</bcp14> be considered to be private use.
+It is expected that runtime ODM namespaces will be allocated and managed per-user and per-mission.
+All text form ODM model IDs <bcp14>SHALL</bcp14> match the <tt>id-text</tt> rule and begin with the bang character "!".
+All integer form ODM model IDs <bcp14>SHALL</bcp14> be negative.
+            </dd>
+          </dl>
+        </section>
+        <section anchor="sec-struct-objref-model-rev">
+          <name>Model Revision</name>
+          <t>
+A single ADM is allowed and expected to change over time, and references to objects within an ADM can include an identifier for a specific ADM revision.
+Each released revision of an ADM <bcp14>SHALL</bcp14> be identified by a specific revision date in the Gregorian calendar.
+An ARI referencing an object within an ADM <bcp14>MAY</bcp14> contain a specific model revision.
+          </t>
+          <t>
+Because an ODM is expected to be dynamic and modified during Agent runtime, there is no meaning to a revision on an ODM.
+An ARI referencing an object within an ODM <bcp14>SHALL NOT</bcp14> contain a model revision.
+          </t>
+          <t>
+The internal representation of revision dates is an implementation matter, but the encoded representations defined in this document include both text and integer form consistent with external standards (cited by the encodings of <xref target="sec-text-form"/> and <xref target="sec-binary-form"/>).
+Note that because ARI structure includes some recursion (<em>e.g.</em>, object reference parameters and container members are themselves ARIs), it is possible to have a model revision present at any depth of a complex ARI.
+          </t>
+          <t>
+Because an Agent is able to implement only a single revision of any model, the model revision data <bcp14>SHALL NOT</bcp14> be present in an ARI being communicated to or from an Agent.
+If an Agent receives an ARI containing model revision information and that is inconsistent with the revision implemented by the Agent, it is an implementation matter for how to detect and handle the inconsistency.
+          </t>
+          <t>
+The reason for including revision information in an ARI is to allow a Manager to keep that information intrinsic to the rest of the ARI in its own bookkeeping.
+A Manager <bcp14>SHALL</bcp14> recursively remove any model revision(s) before transmitting an ARI to an Agent, which satisfies the earlier paragraph.
+A Manager <bcp14>MAY</bcp14> add model revision(s) to an ARI received from an Agent to help its own data bookkeeping.
+          </t>
+        </section>
+        <section anchor="sec-struct-objref-obj-type">
+          <name>Object Type</name>
+          <t>
+Due to the flat structure of an ADM, as defined in <xref section="4" target="I-D.ietf-dtn-amm"/>, all managed objects are of a specific and unchanging type from a set of available DTNMA object types.
+The preferred form for object types in text ARIs is the text name, while in binary form it is the integer enumeration (see <xref target="sec-transcoding"/>).
+Both of these forms have values registered with IANA in <xref target="tab-iana-dtnma-object-types"/>.
+          </t>
+          <t>
+The following subsection explains the form of those object identifiers.
+          </t>
+        </section>
+        <section anchor="sec-struct-objref-obj-id">
+          <name>Object ID</name>
+          <t>
+Within a single ADM or ODM namespace and a single object type, all managed objects have similar characteristics and all objects are identified by a single text name or integer enumeration.
+The preferred form for object names in text ARIs is the text name, while in binary form it is the integer enumeration.
+          </t>
+          <t>
+Any ADM-defined object will have both name and enumeration, while a ODM-defined object can have either but not both.
+Conversion between the two forms requires access to the original ADM, and its specific revision, in which the object was defined.
+All text form object names <bcp14>SHALL</bcp14> match the <tt>id-text</tt> rule of <xref target="sec-uri-enc"/>..
+          </t>
+        </section>
+        <section anchor="sec-struct-objref-params">
+          <name>Parameters</name>
+          <t>
+The ADM logical schema allows many object types to be parameterized when defined in the context of an application or a protocol. 
+          </t>
+          <t>
+If two instances of an ADM resource have the same namespace and same object type and object name but have different parameter values, then those instances are unique and the ARIs for those instances <bcp14>SHALL</bcp14> also be unique.
+Therefore, parameters are considered part of the ARI syntax. 
+          </t>
+          <t>
+The ADM logical schema defines specialized uses for the term "parameter" to disambiguate each purpose, as defined below.
+          </t>
+          <dl newline="true">
+            <dt>Formal Parameters:</dt>
+            <dd>
+Formal parameters define the type, name, and order of the information that customizes an ARI.
+They represent the unchanging "signature" of the parameterized object.
+Because ARIs represent a <em>use</em> of an object and not its definition, formal parameters are not present in an ARI and instead are part of an object model.
+            </dd>
+            <dt>Given Parameters:</dt>
+            <dd>
+              <t>
+Given parameters represent the data values used to distinguish different instances of a parameterized object.
+A given parameter is an AMM value and is represented by an ARI within the context of a parameter list (AC) or parameter map (AM).
+Because of necessary normalizing (of type and default value) based on formal parameters, multiple given parameters can correspond with the same meaning (see Actual Parameters below).
+              </t>
+              <t>
+Additionally, there are two ways in which the value of a given parameter can be specified: parameter-by-value and parameter-by-name.
+              </t>
+              <dl>
+                <dt>Parameter-By-Value:</dt>
+                <dd> 
+                  This method involves directly supplying the 
+                  value as part of the actual parameter. It is the 
+                  default method for supplying values.
+                </dd>
+                <dt>Parameter-By-Name:</dt>
+                <dd> 
+This method involves specifying the name of an other parameter and using that other parameter's value as a substitute for the value of this parameter. 
+This method is useful when a parameterized ARI is produced by an AMM object which itself is parameterized.
+The original ARI parameters contain literal ARIs with <tt>LABEL</tt> type, and when the value is produced based on input parameters the substitution is made.
+In this way, an actual parameter can be "flowed down" to produced values at runtime.
+                </dd>
+              </dl>
+            </dd>
+            <dt>Actual Parameters:</dt>
+            <dd>
+              <t>
+Actual parameters represent a normalized set of values taken from a set of given parameters and normalized using a set of corresponding formal parameters.
+An actual parameter is an AMM value and is represented by an ARI.
+              </t>
+              <t>
+Because normalizing can cause a given parameter to change type (in order to conform to a formal parameter type) or take on a default value (when not present in the given parameters), a single set of actual parameters can correspond with multiple options for given parameters.
+              </t>
+            </dd>
+          </dl>
+        </section>
+      </section>
+      <section anchor="sec-struct-nsref">
+        <name>Namespace References</name>
+        <t>
+A namespace reference is composed of the same initial parts as an object reference: the organization ID and model ID with optional model revision.
+These are used to refer to an entire ADM or ODM namespace.
+It is treated as a separate class of ARI in order to separate it from the additional required parts of an Object Reference (object type and object ID) and optional given parameters.
+The purpose of a namespace reference is to give an ARI value to the whole namespace separately from any of its contained objects.
+        </t>
+      </section>
+    </section>
+    <section anchor="sec-text-form">
+      <name>ARI Text Form</name>
+      <t>
+This section defines how the data model explained in <xref target="sec-ari-structure"/> is encoded as text conforming to the URI syntax of <xref target="RFC3986"/> with value encoding heavily influenced by the CBOR Extended Diagnostic Notation (EDN).
+One significant difference from the ARI encoding from EDN is that ARI identifiers and literal enumerated values are handled in a case-insensitive way, while EDN specifies enumerated values (such as "undefined" and "Infinity" as case sensitive).
+      </t>
+      <t>
+When used within the context of a base ARI, the relative reference form of <xref target="sec-text-reference"/> can be used.
+In all other cases an ARI must be an absolute-path form and contain a scheme.
+      </t>
+      <t>
+While this text description is normative, the ABNF schema in this section provides a more explicit and machine-parsable text schema.
+The scheme name of the ARI is "ari" and the scheme-specific part of the ARI follows one of the forms corresponding to the <xref target="sec-text-literal">literal value</xref>, <xref target="sec-text-objref">object reference</xref>, or <xref target="sec-text-nsref">namespace reference</xref>.
+      </t>
+      <sourcecode type="abnf">
+ari = lit-ari / objref-ari / nsref-ari
+
+; Scheme prefix used in specific contexts
+ARIPREFIX = "ari:"
+      </sourcecode>
+      <section anchor="sec-uri-enc">
+        <name>URIs and Percent Encoding</name>
+        <t>
+Due to the intrinsic structure of the URI, on which the text form of ARI is based, there are limitations on the syntax available to the scheme-specific-part <xref target="RFC7595"/>.
+One of these limitations is that each path segment can contain only characters in the <tt>pchar</tt> ABNF rule defined in <xref target="RFC3986"/>.
+For most parts of the ARI this restriction is upheld by the values themselves: ADM/ODM names, literal and object type names, and object names have a limited character set all within the rule <tt>val-seg</tt>.
+For literals and nested parameters though, the percent encoding of <xref section="2.4" target="RFC3986"/> is needed.
+        </t>
+        <t>
+The following rule <tt>val-seg</tt> is an allowed superset of all path segment patterns, which includes ARI-specific control characters in <tt>val-delims</tt>.
+These control characters <bcp14>SHOULD NOT</bcp14> be percent encoded when encoding an ARI.
+ARI decoders <bcp14>SHALL</bcp14> handle percent encoded forms of all segment contents (<em>i.e.</em>, each portion of an ARI needs to be percent decoded exactly once).
+        </t>
+        <sourcecode type="abnf">
+; A subset of URI "segment-nz" and "pchar" rules which matches all
+; identifiers, primitive values, and typed-literal values.
+val-seg = 1*( unreserved / pct-encoded / val-delims)
+; A subset of URI "reserved" rule.
+val-delims = "!" / "'" / "(" / ")" / "*"/ "+" / "," / ";" / "="
+           / ":" / "@"
+
+; A text name must start with an alphabetic character or underscore
+; with an optional bang prefix.
+id-text = ["!"] (ALPHA / "_") *(ALPHA / DIGIT / "_" / "-" / ".")
+; An integer enum must contain only digits with no zero padding
+; The value must also be 32-bit signed range, 
+; but that is not enforced by this ABNF.
+id-int = ["-"] nopad-number
+
+nopad-number = "0" / non-zero-number
+non-zero-number = %x31-39 *DIGIT
+        </sourcecode>
+        <t>
+          In the ARI text examples in this document the URIs have been percent-decoded for clarity, as might be done in an ARI display and editing tool.
+          But the actual encoded form of the human-friendly ARI <tt>ari:"text"</tt> is <tt>ari:%22text%22</tt>.
+          Outside of literals, the safe characters which are not be percent-encoded are the structural delimiters <tt>/()=;,</tt> used for parameters and ARI collections.
+        </t>
+        <aside>
+          <t>
+Even with the allowed character set of <tt>val-seg</tt> there are still some literal value control characters that do not fit within the URI <tt>pchar</tt> set and which need to be percent-encoded, specifically the double-quote character <tt>"</tt> for text strings.
+          </t>
+        </aside>
+        <t>
+          One other aspect of convenience for human editing of text-form ARIs is linear white space.
+          The current ABNF pattern, staying within the URI pattern, do not allow for whitespace to separate list items or otherwise.
+          A human editing an ARI could find it convenient to include whitespace following commas between list items, or to separate large lists across lines.
+          Any tool that allows this kind of convenience of editing <bcp14>SHALL</bcp14> collapse any white space within a single ARI before encoding its contents.
+        </t>
+      </section>
+      <section anchor="sec-text-literal">
+        <name>Literals</name>
+        <t>
+Based on the structure of <xref target="sec-struct-literal"/>, the text form of the literal ARI contains only a URI path with an optional AMM literal type.
+A literal has no concept of a namespace or context, so the path is always absolute.
+When the path has two segments, the first is the AMM literal type and the second is the encoded literal value.
+When the path has a single segment it is the encoded literal value.
+As a shortcut, an ARI with only a single path segment is necessarily an untyped literal so the leading slash is elided.
+        </t>
+        <t>
+The text form of literal ARI has two layers of coding: the URI path structure and the type-specific value coding.
+These are distinguished below in the ABNF by the <tt>lit-ssp-struct</tt> symbol being for the general path structure and type-specific coding defined in <xref target="sec-text-lit-typed"/>.
+        </t>
+        <sourcecode type="abnf">
+lit-ari = [ARIPREFIX] lit-ssp-struct
+
+lit-ssp-struct = lit-container
+               / lit-typeval-struct
+               / lit-notype-struct
+
+; More complex text for non-primitive values
+lit-typeval-struct = "/" lit-type-id "/" val-seg
+; Type ID is restricted to valid literal types, within the "val-seg"
+; set, and never percent encoded
+lit-type-id = id-text / id-int
+
+; Containers use different structure than lit-typeval-struct
+; because of rule recursion
+lit-container = lit-ac / lit-am / lit-tbl / lit-execset / lit-rptset
+lit-ac = "/" ("AC" / "17") "/" ari-collection
+lit-am = "/" ("AM" / "18") "/" ari-map
+lit-tbl = "/" ("TBL" / "19") "/" ari-tbl
+lit-execset = "/" ("EXECSET" / "20") "/" exec-set
+lit-rptset = "/" ("RPTSET" / "21") "/" rpt-set
+
+; The untyped value is a subset of the "lit-notype" symbol
+lit-notype-struct = val-seg
+        </sourcecode>
+        <section anchor="sec-text-lit-typed">
+          <name>Typed Literal Values</name>
+          <t>
+The definition in this section is a specialization of the <tt>lit-typeval-struct</tt> structure for specific literal types.
+          </t>
+          <t>
+An ARI encoder or decoder <bcp14>SHALL</bcp14> handle both text name and integer enumeration forms of the <tt>lit-type</tt> symbol.
+When present and able to be looked up, the literal type <bcp14>SHOULD</bcp14> be a text name.
+          </t>
+          <t>
+The text form of typed values <bcp14>SHALL</bcp14> be one of the following, based on the associated <tt>lit-type</tt> value in the ARI:
+          </t>
+          <dl newline="true">
+            <dt><tt>NULL</tt>:</dt>
+            <dd>
+              <t>
+This type contains only the single value "null" as in the following ABNF rule.
+            </t>
+              <sourcecode type="abnf">
+null = "null"
+              </sourcecode>
+              <t>
+The canonical form of the null value <bcp14>SHALL</bcp14> be lower case.
+Decoding of values in the null type <bcp14>SHALL</bcp14> be case-insensitive.
+              </t>
+            </dd>
+            <dt><tt>BOOL</tt>:</dt>
+            <dd>
+              <t>
+This type contains the two fixed values "true" and "false" as in the following ABNF rule.
+            </t>
+              <sourcecode type="abnf">
+bool = "true" / "false"
+              </sourcecode>
+              <t>
+The canonical form of boolean values <bcp14>SHALL</bcp14> be lower case.
+Decoding of values in the boolean type <bcp14>SHALL</bcp14> be case-insensitive.
+              </t>
+            </dd>
+            <dt><tt>BYTE</tt>, <tt>INT</tt>, <tt>UINT</tt>, <tt>VAST</tt>, or <tt>UVAST</tt>:</dt>
+            <dd>
+              <t>
+The integer types, signed or unsigned, match the following <tt>integer</tt> ABNF rule.
+Each specific type will limit the domain of valid values within this more general encoding.
+            </t>
+              <sourcecode type="abnf">
+integer = optsign uinteger
+optsign = ["+" / "-"]
+; Just the numeric digits
+uinteger = uint-dec / uint-bin / uint-hex
+uint-dec = 1*DIGIT
+uint-bin = "0b" 1*BIT
+uint-hex = "0x" 1*HEXDIG
+              </sourcecode>
+              <t>
+The canonical form of integer values <bcp14>SHALL NOT</bcp14> include a leading plus character.
+The canonical form of hexadecimal integer values <bcp14>SHALL</bcp14> use upper case letters.
+Decoding of values in the integer type <bcp14>SHALL</bcp14> be case-insensitive.
+              </t>
+            </dd>
+            <dt><tt>REAL32</tt> or <tt>REAL64</tt>:</dt>
+            <dd>
+              <t>
+The floating-point types match the following <tt>float</tt> ABNF rule, which includes a hexadecimal form that avoids decimal conversion of the underlying value.
+All of these forms conform to the text representations defined in Section 5.12 of <xref target="IEEE.754-2019"/> for <tt>binary16</tt>, <tt>binary32</tt>, or <tt>binary64</tt> values.
+              </t>
+              <sourcecode type="abnf">
+float = float-exp / float-dec / float-hex / float-inf / float-nan
+; Decimal exp agrees with C99 '%e' format, point required
+float-exp = optsign float-dec-mant "e" optsign 1*DIGIT
+float-dec-mant = *DIGIT "." 1*DIGIT / 1*DIGIT "."
+; Decimal fraction agrees with C99 '%f' format, point required
+float-dec = optsign float-dec-mant
+; Hexadecimal exp agrees with C99 '%a' format, point required
+float-hex = optsign "0x" float-hex-mant "p" optsign 1*DIGIT
+float-hex-mant = *HEXDIG "." 1*HEXDIG / 1*HEXDIG "."
+; Non-finite enumerated values
+float-inf = optsign "Infinity"
+float-nan = "NaN"
+              </sourcecode>
+              <t>
+The canonical form of float values <bcp14>SHALL NOT</bcp14> include a leading plus character.
+The canonical form of alphabetic characters within float values <bcp14>SHALL</bcp14> be the form in which the ABNF rules are defined above.
+Decoding of values in the float type <bcp14>SHALL</bcp14> be case-insensitive.
+              </t>
+            </dd>
+            <dt><tt>TEXTSTR</tt>:</dt>
+            <dd>
+              <t>
+The text string type matches the following <tt>tstr</tt> ABNF rule after percent-decoding, which is consistent with the CBOR EDN definition.
+As an alternative, if the text value matches the <tt>id-text</tt> character set it can be encoded directly without quoting.
+              </t>
+              <sourcecode type="abnf">
+tstr = tstr-quoted / id-text
+; double-quoted and escaped text logic from Section 7 of RFC 8259
+tstr-quoted = DQUOTE *char DQUOTE
+DQUOTE = %x22
+              </sourcecode>
+              <t>
+The canonical percent encoded form for a text string <bcp14>SHALL</bcp14> treat only the <tt>unreserved</tt> characters and "'" as safe.
+All other characters within the double-quoted text (including the double quotes) <bcp14>SHOULD</bcp14> be percent encoded.
+              </t>
+            </dd>
+            <dt><tt>BYTESTR</tt>:</dt>
+            <dd>
+              <t>
+The byte string type matches the following <tt>bstr</tt> ABNF rule after percent-decoding, which is consistent with the CBOR EDN definition restricted to only utf8, base16, and base64url encodings and disallowing the presence of linear whitespace for base16 and base64url.
+              </t>
+              <sourcecode type="abnf">
+bstr = bstr-utf8 / bstr-b16 / bstr-b64
+; Escaped text logic from Section 7 of RFC 8259
+bstr-utf8 = SQUOTE *char SQUOTE
+; Encoding of Section 8 of RFC 4648
+bstr-b16 = "h" SQUOTE *(2HEXDIG) SQUOTE
+; Encoding of Section 5 of RFC 4648
+bstr-b64 = "b64" SQUOTE *(ALPHA / DIGIT / "-" / "_") *EQ SQUOTE
+
+SQUOTE = %x27
+EQ = %x3D
+              </sourcecode>
+              <t>
+The non-prefixed form of byte string <bcp14>SHALL</bcp14> only be used if the value contains only UTF-8 text in accordance with <xref target="RFC3629"/>.
+When using the "h" prefix the base16 encoding from <xref section="8" target="RFC4648"/> <bcp14>SHALL</bcp14> be used.
+The base16 encoding <bcp14>SHALL</bcp14> have a canonical form using upper case letters.
+When using the "b64" prefix only the base64url encoding from <xref section="5" target="RFC4648"/> <bcp14>SHALL</bcp14> be used as this avoids unnecessary percent encodings.
+The base64url encoding <bcp14>SHALL</bcp14> have a canonical form where padding characters are not used, which is compatible with EDN.
+              </t>
+              <t>
+The canonical percent encoded form for a byte string <bcp14>SHALL</bcp14> treat only the <tt>unreserved</tt> characters and "'" as safe.
+All other characters within the single-quoted text <bcp14>SHOULD</bcp14> be percent encoded.
+              </t>
+            </dd>
+            <dt><tt>TP</tt>:</dt>
+            <dd>
+              <t>
+This type uses either the <tt>date-time</tt> ABNF rule of <xref section="A" target="RFC3339"/> always in the "Z" time-offset, or as a decimal representation of the relative time from the DTN Epoch.
+              </t>
+              <sourcecode type="abnf">
+lit-tp = date-time / float-dec / integer
+              </sourcecode>
+              <t>
+All forms of TP values are limited to a decimal mantissa no larger than a 64-bit signed integer number of nanoseconds.
+This corresponds with an exact domain, in seconds offset from the DTN epoch, of -9223372036.854775808 to 9223372036.854775807 inclusive, or approximately between the years 1708 and 2292.
+              </t>
+              <t>
+When the human-friendly text form of <xref target="RFC3339"/>is used, the date and time <bcp14>SHALL</bcp14> both be present along with the "Z" time-offset.
+The date component separator "-" and time component separator ":" are optional and <bcp14>MAY</bcp14> be omitted by an encoder.
+When separators are omitted, the text need not be percent encoded.
+              </t>
+            </dd>
+            <dt><tt>TD</tt>:</dt>
+            <dd>
+              <t>
+This type uses either the <tt>duration</tt> ABNF rule of <xref section="A" target="RFC3339"/> with a positive or negative sign prefix, or as a decimal representation of the relative time value.
+              </t>
+              <sourcecode type="abnf">
+lit-td = duration / float-dec / integer
+              </sourcecode>
+              <t>
+All forms of TD values are limited to a decimal mantissa no larger than a 64-bit signed integer number of nanoseconds.
+This corresponds with an exact domain, in seconds, of -9223372036.854775808 to 9223372036.854775807 inclusive, or approximately 292 years.
+              </t>
+              <t>
+When the human-friendly text form of <xref target="RFC3339"/>is used, the largest duration component allowed <bcp14>SHALL</bcp14> be the day ("D").
+No year, month, or week components are allowed to be present.
+This text is unquoted and, due to the constraints on its value, need not be percent encoded.
+              </t>
+              <t>
+Additionally, a zero-value duration is valid to be present in the human-friendly form.
+The zero-value duration <bcp14>SHOULD</bcp14> contain only a seconds ("S") component with no fractional part, <em>i.e.</em>, <tt>PT0S</tt>.
+              </t>
+            </dd>
+            <dt><tt>LABEL</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>lit-label</tt> ABNF rule from this document.
+This text is unquoted and, due to the constraints on its value, need not be percent encoded.
+              </t>
+              <sourcecode type="abnf">
+lit-label = id-text / id-int
+              </sourcecode>
+            </dd>
+            <dt><tt>CBOR</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>lit-cbor</tt> ABNF rule for its value.
+The value encoding is the raw byte string of the embedded CBOR item.
+              </t>
+              <sourcecode type="abnf">
+lit-cbor = bstr
+              </sourcecode>
+            </dd>
+            <dt><tt>ARITYPE</tt>:</dt>
+            <dd>
+              <t>
+This type uses the shared <tt>lit-label</tt> ABNF rule for its value to identify a built-in type.
+This means the value can either be the integer enumeration of the type or its text name.
+Processors will treat either form the same if they support the associated built-in type.
+              </t>
+            </dd>
+            <dt anchor="dt-literal-text-objpat"><tt>OBJPAT</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>lit-objpat</tt> ABNF rule for its value to match sets of objects using each of their identifiers as described in <xref target="sec-struct-objpat"/>.
+The range encoding uses included integer intervals identified by their minimum and maximum included values.
+The first interval can elide the minimum value as an indicator that the interval minimum is the domain minimum value.
+The last interval can elide the maximum value as an indicator that the interval maximum is the domain maximum value.
+              </t>
+              <sourcecode type="abnf">
+lit-objpat = 4objpat-part
+; Each independent path segment pattern
+objpat-part = "(" objpat-item ")"
+objpat-item = objpat-wildcard / objpat-single / objpat-range
+
+objpat-wildcard = "*"
+objpat-single = id-text / id-int
+
+; Each interval in comma-separated list
+objpat-range = objpat-intvl *( "," objpat-intvl )
+; Either end can be elided to include the respective domain limit
+objpat-intvl = id-int / ([id-int] ".." [id-int])
+              </sourcecode>
+              <t>
+The canonical form for each range orders the included intervals in ascending order.
+The canonical form of interval uses the single-value variation when its minimum and maximum are equal.
+The canonical form of interval uses indefinite limits as a shortened encoding for the minimum and maximum value of the domain.
+              </t>
+            </dd>
+            <dt><tt>AC</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>ari-collection</tt> ABNF rule for its value.
+Each item of the collection is an already-percent-encoded text-form ARI.
+              </t>
+              <sourcecode type="abnf">
+; A comma-separated list of any form of ARI with enclosure
+ari-collection = "(" [ari-collection-list] ")"
+ari-collection-list = ari *("," ari)
+              </sourcecode>
+            </dd>
+            <dt><tt>AM</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>ari-map</tt> ABNF rule for its value.
+Each key of the map is an already-percent-encoded text-form literal-value ARI.
+Each value of the map is an already-percent-encoded text-form ARI.
+              </t>
+              <sourcecode type="abnf">
+; A comma-separate list of pairs, each delimited by equal-sign
+; with literal-only keys
+ari-map = "(" [ari-map-list] ")"
+ari-map-list = ari-map-pair *("," ari-map-pair)
+ari-map-pair = lit-notype "=" ari
+              </sourcecode>
+              <t>
+Although an AM value logically has no specific ordering of its contained pairs, an encoded AM value necessarily has an ordering.
+The canonical encoded form of an AM value <bcp14>SHALL</bcp14> use the same key ordering defined for the CBOR map deterministic ordering in <xref section="4.2.1" target="RFC8949"/>.
+An implementation <bcp14>MAY</bcp14> choose to preserve AM key ordering between encoded forms.
+              </t>
+            </dd>
+            <dt><tt>TBL</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>ari-tbl</tt> ABNF rule for its value.
+The value is prefixed by the number of columns in the table, followed by an AC representing each separate row in the table.
+Each item of the table is an already-percent-encoded text-form ARI.
+            </t>
+              <sourcecode type="abnf">
+ari-tbl = "c=" nopad-number ";" *ari-collection
+              </sourcecode>
+              <t>
+The length of each row in a TBL value <bcp14>SHALL</bcp14> be equal to the column count (<tt>c</tt> parameter) of the TBL.
+              </t>
+              <aside>
+                <t>Note that although the TBL uses the same syntax as AC for encoding each row, the value itself is not necessarily internally represented by a sequence of AC values.</t>
+              </aside>
+            </dd>
+            <dt><tt>EXECSET</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>exec-set</tt> ABNF rule for its value.
+            </t>
+              <sourcecode type="abnf">
+exec-set = "n=" exec-nonce ";" exec-targets
+exec-nonce = null / uinteger / bstr
+exec-targets = ari-collection
+              </sourcecode>
+              <t>
+The value is prefixed by the optional nonce value for the associated execution(s), followed by an AC representing each item to be executed (either a CTRL reference, MAC-producing reference, or MAC value literal).
+When using the integer type, the nonce value <bcp14>SHALL</bcp14> be restricted to only non-negative integers.
+Each item of the targets is an already-percent-encoded text-form ARI.
+An EXECSET target list <bcp14>SHALL</bcp14> be non-empty to be a valid value.
+              </t>
+              <aside>
+                <t>Note that although the EXECSET uses the same syntax as AC for encoding each row, the value itself is not necessarily internally represented by an AC.</t>
+              </aside>
+            </dd>
+            <dt><tt>RPTSET</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following <tt>rpt-set</tt> ABNF rule for its value.
+The value consists of the optional nonce value for the associated execution(s), a reference absolute time for all contained reports, and the list of contained reports.
+Each contained report consists of a relative creation time for the report (relative to the RPTSET reference time), a reference to the source of the report, and an AC representing each item in the report.
+Each item of a report is an already-percent-encoded text-form ARI, as is the source reference.
+The nonce and timestamps are all literal values constrained to specific value types.
+An RPTSET report list <bcp14>SHALL</bcp14> be non-empty to be a valid value.
+            </t>
+              <sourcecode type="abnf">
+rpt-set = "n=" exec-nonce ";r=" lit-ari ";(" [rpt-list] ")"
+rpt-list = rpt-container *("," rpt-container)
+rpt-container = "t=" lit-ari ";s=" ari ";" rpt-items
+rpt-items = ari-collection
+              </sourcecode>
+              <aside>
+                <t>
+Note that although the report container uses the same syntax as AC for encoding each report item list, the list itself is not necessarily internally represented by an AC.
+                </t>
+              </aside>
+              <t>
+The canonical encoded form of the reports list is ordered by increasing "t" field.
+              </t>
+            </dd>
+          </dl>
+          <t>
+Some examples of typed literal values are below.
+The represented values for TP, TD, and CBOR types are the same just with different text representations.
+The three ARITYPE values refer to the same built-in type.
+          </t>
+          <sourcecode type="uri">
+ari:/NULL/null
+ari:/BOOL/true
+ari:/BYTE/10
+ari:/INT/10
+ari:/UINT/10
+ari:/VAST/10
+ari:/UVAST/10
+ari:/REAL32/1e10
+ari:/LABEL/name
+ari:/TP/20230102T030405Z
+ari:/TP/2023-01-02T03:04:05Z
+ari:/TP/725943845
+ari:/TD/+PT1H
+ari:/TD/3600
+ari:/LABEL/name
+ari:/CBOR/h'0a'
+ari:/ARITYPE/int
+ari:/ARITYPE/INT
+ari:/ARITYPE/4
+          </sourcecode>
+          <t>
+The following object reference patterns will match objects meeting all of the following: is in the organization "example" (65535), is in a model with a private use (negative) enumeration or model number 1, has any object type, and has an object enumeration between 10 and 100 inclusive.
+The second example is a longer form representing the same pattern but using explicit interval limits at the end of associated numeric domain.
+          </t>
+          <sourcecode type="uri">
+ari:/OBJPAT/(65535)(..-1,1)(*)(10..100)
+ari:/OBJPAT/(65535)(-2147483648..-1,1..1)\
+    (-2147483648..2147483647)(10..100)
+          </sourcecode>
+          <t>
+These are typed container values in text form:
+          </t>
+          <sourcecode type="uri">
+ari:/AC/(1,2,3)
+ari:/AM/(1=2,2=4,3=9)
+ari:/TBL/c=3;(1,true,%22A%22)(2,false,%22B%22)
+          </sourcecode>
+          <t>
+And these are a pair of EXECSET and RPTSET having identical nonce value (folded according to <xref target="sec-intro-linefold"/>):
+          </t>
+          <sourcecode type="uri">
+ari:/EXECSET/n=1234;(\
+    //example/adm-a/CTRL/dothing,\
+    //example/adm-a/CONST/amacro\
+)
+ari:/RPTSET/n=1234;r=/TP/20230102T030405Z;(\
+    t=/TD/PT0S;s=//example/adm-a/CTRL/dothing;(null),\
+    t=/TD/PT5S;s=//example/adm-a/CONST/amacro;(null)\
+)
+         </sourcecode>
+        </section>
+        <section>
+          <name>Untyped Literal Values</name>
+          <t>
+The definition in this section is a specialization of the <tt>lit-notype-struct</tt> structure for specific primitive types.
+          </t>
+          <t>
+When untyped, the literal value <bcp14>SHALL</bcp14> be one of the primitive types named by the <tt>lit-notype</tt> ABNF rule below.
+The separate value encodings use rules from <xref target="sec-text-lit-typed"/>.
+          </t>
+          <sourcecode type="abnf">
+lit-notype = undefined / null / bool / float / integer / tstr / bstr
+undefined = "undefined"
+          </sourcecode>
+          <aside>
+            <t>
+The order of this symbol sequence is significant because the unquoted <tt>tstr</tt> must be matched after the enumerated types of <tt>undefined</tt>, <tt>null</tt>, and <tt>bool</tt>.
+            </t>
+          </aside>
+          <t>
+The undefined value is only valid as an untyped literal, it has no associated built-in type.
+The canonical form of the undefined value <bcp14>SHALL</bcp14> be lower case.
+Decoding of the undefined value <bcp14>SHALL</bcp14> be case-insensitive.
+          </t>
+          <t>
+Integer values in the untyped literal <bcp14>SHALL</bcp14> be limited to the union of all integer types in the AMM (<tt>BYTE</tt>, <tt>INT</tt>, <tt>UINT</tt>, <tt>VAST</tt>, and <tt>UVAST</tt>).
+This has a total domain of -(2^63) to 2^64-1 inclusive.
+          </t>
+          <t>
+Floating point values in the untyped literal <bcp14>SHALL</bcp14> be limited to the union of all floating point types in the AMM (<tt>REAL32</tt> and <tt>REAL64</tt>).
+          </t>
+          <t>
+Some example of untyped literals are below.
+          </t>
+          <sourcecode type="uri">
+ari:undefined
+ari:null
+ari:true
+ari:FALSE
+ari:1.1
+ari:1.
+ari:.1
+ari:1.1e+06
+ari:0x1.4p+3
+ari:0x1.p+3
+ari:0x.4p3
+ari:Infinity
+ari:-Infinity
+ari:NaN
+ari:10
+ari:0xA
+ari:0b1010
+ari:-0x10
+ari:0x7FFFFFFFFFFFFFFF
+ari:-0x8000000000000000
+ari:'bytes'
+ari:h'6279746573'
+ari:b64'Ynl0ZXM'
+ari:text
+ari:%22text%22
+ari:%22hi%5Cu1234%22
+ari:%22hi%5CuD834%5CuDD1E%22
+          </sourcecode>
+        </section>
+        <section>
+          <name>Preferred Encodings</name>
+          <t>
+Several of the literal types defined in <xref target="sec-text-lit-typed"/> allow the same AMM value to be represented by multiple logically equivalent encodings.
+Because these encodings are not equivalent in represented text size or processing needs it is useful for an ARI processor to allow a user to determine preferred encodings when processing text-form ARIs.
+          </t>
+          <dl>
+            <dt>Integer values:</dt>
+            <dd>
+These options correspond to the <tt>BYTE</tt>, <tt>INT</tt>, <tt>UINT</tt>, <tt>VAST</tt>, and <tt>UVAST</tt> types and untyped <tt>int</tt> values.
+These values can be encoded as either base-2, base-10, or base-16.
+In uses which are more resource constrained and less human-facing a processor <bcp14>MAY</bcp14> encode integers only in base-16.
+            </dd>
+            <dt>Floating point values:</dt>
+            <dd>
+These options correspond to the <tt>REAL32</tt> and <tt>REAL64</tt> types and untyped <tt>float</tt> values.
+These values can be encoded as either decimal fraction, decimal exponential, or hexadecimal exponential.
+In uses which are more resource constrained and less human-facing a processor <bcp14>MAY</bcp14> encode floats only as hexadecimal.
+            </dd>
+            <dt>Byte string values:</dt>
+            <dd>
+These options correspond to the <tt>BYTESTR</tt> and <tt>CBOR</tt> types and untyped <tt>bstr</tt> values.
+These values can be encoded as either raw bytes, base16, or base64url.
+In uses which are more resource constrained and less human-facing a processor <bcp14>MAY</bcp14> encode byte strings only as base16.
+            </dd>
+            <dt>Time values:</dt>
+            <dd>
+These options correspond to the <tt>TP</tt> and <tt>TD</tt> types.
+These values can be encoded as either delimited text, non-delimited text, or decimal fraction.
+In uses which are more resource constrained and less human-facing a processor <bcp14>MAY</bcp14> encode time values only as decimal fraction.
+            </dd>
+          </dl>
+        </section>
+      </section>
+      <section anchor="sec-text-objref">
+        <name>Object References</name>
+        <t>
+          Based on the structure of <xref target="sec-struct-objref"/>, the text form of the object reference ARI is a URI with an authority, corresponding to the organization ID, and three path segments, corresponding to the model ID, object type and object ID respectively.
+          Those components (excluding parameters as defined below) are referred to as the object identifier.
+        </t>
+        <t>
+          An ARI encoder or decoder <bcp14>SHALL</bcp14> handle both text name and integer enumeration forms of the organization ID, model ID, object type, and object ID.
+        </t>
+        <t>
+          The final segment containing the object ID <bcp14>MAY</bcp14> contain parameters enclosed by parentheses "(" and ")".
+          There is no semantic distinction between the absence of parameters and the empty parameter list.
+          The contents of the parameters <bcp14>SHALL</bcp14> be interpreted as a literal AC or AM in accordance with <xref target="sec-text-literal"/>.
+        </t>
+        <t>
+          The parameters as a whole <bcp14>SHALL</bcp14> be the percent encoded form of the constituent ARIs, excluding the structural delimiters <tt>/(),=</tt>.
+          Implementations are advised to be careful about the percent encoded vs. decoded cases of each of the nested ARIs within parameters to avoid duplicate encoding or decoding.
+          It is recommended to dissect the parameters and ARI collections in their encoded form first, and then to dissect and percent decode each separately and recursively.
+        </t>
+        <t>
+The object reference ARI has the following ABNF definition.
+        </t>
+        <sourcecode type="abnf">
+; The structure of an object reference shares the "nsref-ari" rule
+objref-ari = nsref-ari objref-underns
+
+; Path under the namespace, with optional parameters
+objref-underns = obj-type "/" obj-id [paramlist]
+
+; Parameters are either AC or AM
+paramlist = ari-collection / ari-map
+
+; Organization ID, within the "val-seg" set
+org-id = id-text / id-int
+; Model ID and optional revision, within the "val-seg" set
+model-seg = model-id ["@" model-rev]
+model-id = id-text / id-int
+model-rev = full-date ; from RFC 3339
+; Type is restricted to valid object types, within the "val-seg" set
+obj-type = id-text / id-int
+; Object ID, within the "val-seg" set
+obj-id = id-text / id-int
+        </sourcecode>
+        <t>
+Some examples of object reference values are below.
+        </t>
+        <sourcecode type="uri">
+ari://example/adm-a@2024-06-25/EDD/someobj
+ari://example/adm-a/EDD/someobj
+ari://example/adm-a/CTRL/otherobj(true,3)
+ari://example/adm-a/CTRL/otherobj(%22a%20param%22,/UINT/10)
+ari://65535/1/-1/0
+ari://example/!odm-b/VAR/counter
+ari://65535/-20/-11/84
+        </sourcecode>
+      </section>
+      <section anchor="sec-text-nsref">
+        <name>Namespace References</name>
+        <t>
+Based on the structure of <xref target="sec-struct-nsref"/>, the text form of the namespace reference ARI is a URI with an authority part and one path segment, corresponding to the model ID with optional revision, followed by a path separator.
+The trailing path separator <bcp14>SHALL</bcp14> be present in the canonical form of a namespace reference.
+        </t>
+        <t>
+The namespace reference ARI has the following ABNF definition.
+        </t>
+        <sourcecode type="abnf">
+; Absolute namespace with optional scheme
+nsref-ari = [ARIPREFIX] "//" org-id "/" model-seg "/"
+        </sourcecode>
+        <t>
+Some examples of namespace reference values are below.
+        </t>
+        <sourcecode type="uri">
+ari://example/adm-a@2024-06-25/
+ari://example/adm-a/
+ari://65535/1/
+ari://example/!odm-b/
+ari://65535/-20/
+        </sourcecode>
+      </section>
+      <section anchor="sec-text-reference">
+        <name>Relative References</name>
+        <t>
+The text form of ARI can contain a relative reference, as defined in <xref section="4.1" target="RFC3986"/>, only for the specific case of eliding the namespace of <xref target="sec-text-objref">object reference</xref> and <xref target="sec-text-nsref">namespace reference</xref> values.
+        </t>
+        <t>
+For a relative reference value, its namespace portion <bcp14>SHALL</bcp14> start with a relative path segment "." or "..", rather than an authority part, as in the ABNF rule augmentation below.
+In accordance with <xref target="RFC3986"/> a relative reference <bcp14>SHALL NOT</bcp14> contain a scheme part.
+        </t>
+        <sourcecode type="abnf">
+; Relative reference to other model in same org as context
+nsref-ari =/ "../" model-seg "/"
+; Relative reference to context namespace
+nsref-ari =/ "./"
+        </sourcecode>
+        <t>
+Examples of text name and integer enumerated identifiers in a relative reference are below.
+        </t>
+        <sourcecode type="uri">
+./CTRL/do-thing
+./CTRL/otherobj(%22a%20param%22,/UINT/10)
+./-2/30
+        </sourcecode>
+        <t>
+Relative reference resolution is discussed in <xref target="sec-proc-resolve"/>.
+        </t>
+      </section>
+    </section>
+    <section anchor="sec-binary-form">
+      <name>ARI Binary Form</name>
+      <t>
+        This section defines how the data model explained in <xref target="sec-ari-structure"/> is encoded as a binary sequence conforming to the CBOR syntax of <xref target="RFC8949"/>.
+        Within this section the term "item" is used to mean the CBOR-decoded data item which follows the logical model of CDDL <xref target="RFC8610"/>.
+      </t>
+      <t>
+        The binary form of the URI is intended to be used for machine-to-machine interchange so it is missing some of the human-friendly shortcut features of the ARI text form from <xref target="sec-text-form"/>.
+        It still follows the same logical data model so it has a one-for-one representation of all of the styles of text-form ARI.
+      </t>
+      <t>
+        While this text description is normative, the CDDL schema in this section provides a more explicit and machine-parsable binary schema.
+      </t>
+      <sourcecode type="cddl">
+ari = lit-ari / objref-ari / nsref-ari / relref-ari
+      </sourcecode>
+      <section>
+        <name>Intermediate CBOR</name>
+        <t>
+The CBOR item form is used as an intermediate encoding between the ARI data and the ultimate binary encoding.
+When decoding a binary form ARI, the CBOR must be both "well-formed" according to <xref target="RFC8949"/> and "valid" according to the CDDL model of this specification.
+Implementations are encouraged, but not required, to use a streaming form of CBOR encoder/decoder to reduce memory consumption of an ARI handler.
+For simple implementations or diagnostic purposes, a two stage conversion between ARI--CBOR and CBOR--binary can be more easily understood and tested.
+        </t>
+      </section>
+      <section anchor="sec-binary-literal">
+        <name>Literals</name>
+        <t>
+          Based on the structure of <xref target="sec-struct-literal"/>, the binary form of the literal ARI contains a data item along with an optional AMM literal type identifier.
+          In order to keep the encoding as short as possible, the untyped literal is encoded as the simple value itself.
+          Because the typed literal and the object reference forms uses CBOR array framing, this framing is used to disambiguate from the pure-value encoding of the <tt>lit-notype</tt> CDDL symbol.
+        </t>
+        <t>
+          When present, the literal type <bcp14>SHALL</bcp14> be an integer enumeration.
+          When typed, the decoded literal value <bcp14>SHALL</bcp14> be a valid CBOR item conforming to the AMM literal type definition of the <tt>$lit-typeval</tt> CDDL socket.
+          When untyped, the decoded literal value <bcp14>SHALL</bcp14> be one of the primitive types named by the <tt>lit-notype</tt> CDDL symbol.
+        </t>
+        <t>
+The literal ARI, both typed and untyped, has the following CDDL definition.
+        </t>
+        <sourcecode type="cddl">
+lit-ari = lit-typeval / lit-notype
+
+; undefined value is only allowed as non-typed literal
+lit-notype = undefined / null / bool / (int64 / uint64)
+           / float / tstr / bstr
+
+lit-typeval = $lit-typeval .within lit-typeval-struct
+lit-typeval-struct = [
+  lit-type: lit-type-id,
+  lit-value: any
+]
+lit-type-id = (int32 .ge 0)
+</sourcecode>
+        <t>
+The typed value encodings are organized by AMM type in the following CDDL plug definitions.
+        </t>
+        <dl newline="true">
+          <dt><tt>NULL</tt>:</dt>
+          <dd>
+            <t>
+This type contains only the single null value as in the following plug.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [0, null]
+            </sourcecode>
+          </dd>
+          <dt><tt>BOOL</tt>:</dt>
+          <dd>
+            <t>
+This type contains the two fixed special values as in the following plug, which uses a base CDDL rule.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [1, bool]
+            </sourcecode>
+          </dd>
+          <dt><tt>BYTE</tt>, <tt>INT</tt>, <tt>UINT</tt>, <tt>VAST</tt>, or <tt>UVAST</tt>:</dt>
+          <dd>
+            <t>
+The integer types, signed or unsigned, match the following plugs.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [2, uint .size 1] ; 1-byte
+$lit-typeval /= [4, int32] ; 4-byte
+$lit-typeval /= [5, uint32] ; 4-byte
+$lit-typeval /= [6, int64] ; 8-byte
+$lit-typeval /= [7, uint64] ; 8-byte
+            </sourcecode>
+          </dd>
+          <dt><tt>REAL32</tt> or <tt>REAL64</tt>:</dt>
+          <dd>
+            <t>
+The floating-point types match the following plugs, which use base CDDL rules.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [8, float16 / float32]
+$lit-typeval /= [9, float16 / float32 / float64]
+            </sourcecode>
+          </dd>
+          <dt><tt>TEXTSTR</tt> or <tt>BYTESTR</tt>:</dt>
+          <dd>
+            <t>
+The text string and byte string types match the following plugs, which use base CDDL rules.
+No quoting or escaping is necessary to distinguish values in these types.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [10, tstr]
+$lit-typeval /= [11, bstr]
+            </sourcecode>
+          </dd>
+          <dt><tt>TP</tt> or <tt>TD</tt>:</dt>
+          <dd>
+            <t>
+The time point and time difference types match the following plugs, which use a common rule for time-related values.
+The <tt>lit-time</tt> rule allows expressing a time offset as either integer seconds or a decimal fraction.
+The <tt>time-fraction</tt> rule uses the same structure as CBOR tag #4 "decimal fraction" but limited in domain for time values.
+            </t>
+            <sourcecode type="cddl">
+; Absolute timestamp as seconds from DTN Epoch
+$lit-typeval /= [12, lit-time]
+; Relative time interval as seconds
+$lit-typeval /= [13, lit-time]
+
+lit-time = int / time-fraction
+time-fraction = [
+  exp: (-9 .. 9) .within int,
+  mantissa: int64,
+]
+            </sourcecode>
+            <t>
+The canonical encoded form for time offset uses the integer variation if it results in a smaller encoded size.
+The canonical encoded form for decimal fraction uses a minimum-size mantissa (<em>i.e.</em>, its decimal form has no trailing zeros).
+            </t>
+          </dd>
+          <dt><tt>LABEL</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug rule.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [14, lit-label]
+lit-label = id-int / id-text
+            </sourcecode>
+          </dd>
+          <dt><tt>CBOR</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug rule, which explicitly constrains the byte string well-formed-ness.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [15, lit-cbor]
+lit-cbor = bstr .cbor any
+            </sourcecode>
+          </dd>
+          <dt><tt>ARITYPE</tt>:</dt>
+          <dd>
+            <t>
+This type uses the same rule as the <tt>LABEL</tt> but with a context-independent interpretation as matching one of the built-in literal types.
+This means the value can either be the integer enumeration of the type or its text name.
+Processors will treat either form the same if they support the associated built-in type.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [16, lit-label]
+            </sourcecode>
+          </dd>
+            <dt anchor="dt-literal-binary-objpat"><tt>OBJPAT</tt>:</dt>
+            <dd>
+              <t>
+This type uses the following plug for its value to match sets of objects using each of their identifiers as described in <xref target="sec-struct-objpat"/>.
+The range encoding uses a compressed form of interval logic to encode the least included value and only the widths of each subsequent included and excluded interval.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [24, lit-objpat]
+lit-objpat = [
+  org-id: objpat-item,
+  model-id: objpat-item,
+  type-id: objpat-item,
+  obj-id: objpat-item
+]
+objpat-item = objpat-wildcard / objpat-single / objpat-range
+
+objpat-wildcard = true
+objpat-single = id-int / id-text
+
+; Intervals are in-order because widths cannot be negative
+objpat-range = [
+  ; least included value (or domain minimum)
+  least: id-int / null,
+  * (
+    ; width of included interval
+    incl: id-width
+    ; width of excluded interval
+    excl: id-width
+  ),
+  ; Width of last included interval (or domain maximum)
+  incl: id-width / null
+]
+id-width = uint32
+            </sourcecode>
+          </dd>
+          <dt><tt>AC</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug for its value.
+Each item of the array is itself an ARI value (not byte string wrapped).
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [17, ari-collection]
+ari-collection = [*ari]
+            </sourcecode>
+          </dd>
+          <dt><tt>AM</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug for its value.
+Each pair of the map is itself composed of ARI values, where keys are restricted to untyped literals.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [18, ari-map]
+ari-map-key = lit-notype
+ari-map = {*ari-map-key =&gt; ari}
+            </sourcecode>
+          </dd>
+          <dt><tt>TBL</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug for its value.
+The first item of the array indicates the number of columns in the table, all of the subsequent items is a concatenation of all rows in the table (<em>i.e.</em> a row-major flattened form).
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= [19, ari-tbl]
+ari-tbl = [
+  ncol: uint, ; Number of columns in the table
+  *ari
+]
+            </sourcecode>
+          </dd>
+          <dt><tt>EXECSET</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug for its value, where named fields correspond with the logical structure defined in the AMM.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= lit-execset
+lit-execset = [20, exec-set]
+exec-set = [
+  nonce,
+  exec-targets,
+]
+nonce = null / uint / bstr
+; Valid target types are defined by the AMM
+exec-targets = (*ari)
+            </sourcecode>
+          </dd>
+          <dt><tt>RPTSET</tt>:</dt>
+          <dd>
+            <t>
+This type uses the following plug for its value, where named fields correspond with the logical structure defined in the AMM.
+The <tt>ref-time</tt> field is interpreted as a absolute time using the same encoding as <tt>TP</tt>.
+The <tt>rel-time</tt> field is interpreted as a difference relative to <tt>ref-time</tt> using the same encoding as <tt>TD</tt>.
+            </t>
+            <sourcecode type="cddl">
+$lit-typeval /= lit-rptset
+lit-rptset = [21, rpt-set]
+rpt-set = [
+  nonce,
+  ref-time: lit-time,
+  * rpt-container
+]
+rpt-container = [
+  rel-time: lit-time,
+  source: objref-ari,
+  rpt-items
+]
+rpt-items = (* ari)
+            </sourcecode>
+              <t>
+The canonical encoded form of the reports list is ordered by increasing <tt>rel-time</tt> field.
+              </t>
+          </dd>
+        </dl>
+        <t>
+Some example of the forms for a literal are below.
+In all cases, the use of CBOR EDN means that the symbol case and numeric base are artifacts of the EDN and not the CBOR items being used as examples.
+        </t>
+        <t>
+These first are untyped primitive values in a sequence:
+        </t>
+        <sourcecode type="cbor">
+undefined,
+null,
+true,
+1.1,
+NaN,
+10,
+'bytes',
+"text"
+        </sourcecode>
+        <t>
+And these are typed values in a sequence:
+        </t>
+        <sourcecode type="cbor">
+[0, null],
+[1, true],
+[2, 10],
+[4, 10],
+[5, 10],
+[6, 10],
+[7, 10],
+[8, 1e10],
+[12, 725943845],
+[13, [2, 36]],
+[14, "name"],
+[15, &lt;&lt;10&gt;&gt;],
+[16, 4]
+        </sourcecode>
+        <t>
+The following reference patterns are equivalent to the examples in <xref target="sec-text-literal"/>, where the first example uses an indefinite endpoint and wildcard to compress the ranges.
+        </t>
+        <sourcecode type="cbor">
+[24, [
+  65535,
+  [null, 2147483647, 1, 1], / for (..-1,1) /
+  true, / for (*) /
+  [10, 90] / for (10..100) /
+]],
+[24, [
+  65535,
+  [-2147483648, 2147483647, 1, 1], / for (..-1,1) /
+  [-2147483648, 4294967295], / for (-2147483648..2147483647) /
+  [10, 90] / for (10..100) /
+]]
+        </sourcecode>
+        <t>
+These are typed container values in binary form equivalent to the examples in <xref target="sec-text-literal"/>.
+        </t>
+        <sourcecode type="cbor">
+[17, [1, 2, 3]],
+[18, {1: 2, 2: 4, 3: 9}],
+[19, [3, 1, true, "A", 2, false, "B"]]
+        </sourcecode>
+      </section>
+      <section anchor="sec-binary-objref">
+        <name>Object References</name>
+        <t>
+Based on the structure of <xref target="sec-struct-objref"/>, the binary form of the object reference ARI is a CBOR-encoded item.
+An ARI <bcp14>SHALL</bcp14> be encoded as a CBOR array with between four and six items.
+The first items correspond to the organization ID, model ID, optional model revision, object type, and object ID.
+Those items together are referred to as the object identifier.
+The optional last item of the array is the parameter list.
+        </t>
+        <t>
+Each of the organization ID, model ID, object type, and object ID of an object identifier <bcp14>SHALL</bcp14> be represented as either text name <tt>id-text</tt> or integer enumeration <tt>id-int</tt> form or the <tt>null</tt> value to indicate its absence.
+        </t>
+        <t>
+The model revision <bcp14>SHALL</bcp14> be represented as a CBOR-tagged text date in accordance with <xref target="RFC8943"/>.
+The presence or absence of the model revision can be detected by decoders due to its mandatory CBOR tag 1004; the following item (object type) is always untagged.
+ARI processors <bcp14>MAY</bcp14> decompose and integer-decode the model revision date in order to optimize storage or comparisons.
+For example, when matching ADM revisions during an ARI dereference activity per <xref section="6.3" target="I-D.ietf-dtn-amm"/>.
+Any model revision date handling <bcp14>SHALL NOT</bcp14> affect the text representation if re-encoding the ARI.
+Because the date format does not allow variation of text encoding, this is easily satisfied and there is no need to preserve the original text value if decoding.
+        </t>
+        <t>
+When present, the parameters <bcp14>SHALL</bcp14> be either the <tt>ari-collection</tt> or <tt>ari-map</tt> structure.
+In other words, just the value-portion of the AC or AM typed literal because no other disambiguation needs to be made for the parameter type.
+        </t>
+        <t>
+The object reference ARI has the following CDDL definition.
+        </t>
+        <sourcecode type="cddl">
+; Type-agnostic object reference
+objref-ari = $objref-ari .within ref-ari-struct
+
+; General structure of any reference
+ref-ari-struct = [
+  org-id / null,
+  (
+    model-id,
+    ? model-rev
+  ) / null,
+  obj-type-id / null,
+  obj-id / null,
+  ?params
+]
+
+; Identifier for a single object
+obj-ident&lt;obj-type&gt; = (
+  org-id,
+  model-id,
+  ? model-rev,
+  obj-type,
+  obj-id,
+)
+
+org-id = id-int / id-text
+model-id = id-int / id-text
+model-rev = #6.1004(tstr) ; from RFC 8943
+obj-type-id = (id-int .lt 0) / id-text
+obj-id = (id-int .ge 0) / id-text
+
+params = ari-collection / ari-map
+
+; Generic usable for restricting objref-ari by type
+objref-type&lt;obj-type&gt; = [
+  obj-ident&lt;obj-type&gt;,
+  ?params
+]
+
+; IANA-assigned object types
+IDENT = -1
+$objref-ari /= objref-type&lt;IDENT&gt;
+CONST = -2
+$objref-ari /= objref-type&lt;CONST&gt;
+CTRL = -3
+$objref-ari /= objref-type&lt;CTRL&gt;
+EDD = -4
+$objref-ari /= objref-type&lt;EDD&gt;
+OPER = -6
+$objref-ari /= objref-type&lt;OPER&gt;
+SBR = -8
+$objref-ari /= objref-type&lt;SBR&gt;
+TBR = -10
+$objref-ari /= objref-type&lt;TBR&gt;
+VAR = -11
+$objref-ari /= objref-type&lt;VAR&gt;
+TYPEDEF = -12
+$objref-ari /= objref-type&lt;TYPEDEF&gt;
+        </sourcecode>
+        <t>
+An example object reference without parameters is:
+        </t>
+        <sourcecode type="cbor">
+[65535, 1, -1, 0]
+        </sourcecode>
+        <t>
+Another example object reference with parameters is:
+        </t>
+        <sourcecode type="cbor">
+[65535, 1, -2, 3, ["a param", [4, 10]]]
+        </sourcecode>
+      </section>
+      <section anchor="sec-binary-nsref">
+        <name>Namespace References</name>
+        <t>
+Based on the structure of <xref target="sec-struct-nsref"/>, the binary form of the namespace reference ARI is a specialization of the object reference encoding as defined in the following CDDL.
+        </t>
+        <sourcecode type="cddl">
+nsref-ari = [
+  org-id,
+  model-id,
+  ? model-rev,
+  null,
+  null
+] .within ref-ari-struct
+        </sourcecode>
+        <t>
+Some examples of namespace reference values are below, both with text form and integer form identifiers.
+For equivalence, model "adm-a" has enumeration 1 and "!odm-b" has enumeration -20.
+        </t>
+        <sourcecode type="cbor">
+["example", "adm-a", 1004("2024-06-25"), null, null],
+[65535, 1, 100(19899), null, null],
+["example", "adm-a", null, null],
+[65535, 1, null, null],
+["example", "!odm-b", null, null],
+[65535, -20, null, null]
+        </sourcecode>
+      </section>
+      <section anchor="sec-binary-reference">
+        <name>Relative References</name>
+        <t>
+The binary form of ARI includes the ability to encode a relative reference only for the specific case of eliding the namespace of Object Reference values.
+In this case the organization ID, and possibly model ID, portions of an object identifier are replaced by the CBOR value <tt>null</tt> as defined below.
+If the model ID is absent, there <bcp14>SHALL NOT</bcp14> be a model revision present.
+        </t>
+        <t>
+These restrictions are captured in the following CDDL.
+        </t>
+        <sourcecode type="cddl">
+relref-ari = [
+  null,
+  (
+    model-id,
+    ? model-rev,
+  ) / null,
+  obj-type-id,
+  obj-id,
+  ?params
+] .within ref-ari-struct
+        </sourcecode>
+        <t>
+Examples of text name and integer enumerated identifiers in a relative reference are below.
+        </t>
+        <t>
+These example corresponds to the URI references <tt>./CTRL/do-thing</tt> and <tt>./-2/30</tt> respectively.
+        </t>
+        <sourcecode type="cbor">
+[null, null, "CTRL", "do-thing"],
+[null, null, -2, 30]
+        </sourcecode>
+        <t>
+These example corresponds to the URI references <tt>../!odm10/var/threshold</tt> and <tt>../-10/-11/2</tt> respectively.
+        </t>
+        <sourcecode type="cbor">
+[null, "!odm10", "var", "threshold"],
+[null, -10, -11, 2]
+        </sourcecode>
+        <t>
+Relative reference resolution is discussed in <xref target="sec-proc-resolve"/>.
+        </t>
+      </section>
+    </section>
+    <section anchor="sec-proc">
+      <name>Processing Activities</name>
+      <t>
+Separate from the forms of encoding the ARI information, there are some ARI-specific processing activities that can be used to transform one ARI value into another without changing the higher-level meaning of the value.
+Both of these activities require an external context to work in a meaningful way.
+      </t>
+      <section anchor="sec-proc-idtrans">
+        <name>ID Segment Translation</name>
+        <t>
+Both the text and binary form of the ARI allow ID segments to contain either a text name or an integer enumeration.
+ARIs can be translated one-for-one between the two forms without loss.
+        </t>
+        <t>
+When translating literal types into text form and code point lookup tables are available, the literal type <bcp14>SHOULD</bcp14> be converted to its text name.
+When translating literal types from text form and code point lookup tables are available, the literal type <bcp14>SHOULD</bcp14> be converted from its text name.
+The conversion between AMM literal type name and enumeration requires a lookup table based on the registrations in <xref target="tab-iana-dtnma-literal-types"/>.
+        </t>
+        <t>
+The <tt>LABEL</tt> literal type offers a choice of text name or integer enumeration forms.
+The conversion between these LABEL value forms requires a lookup table based on the context in which the value is being used.
+LABEL values used as value-producing object given parameters refer to names or ordinals of the corresponding formal parameters.
+LABEL values used within the table filtering control refer to names or ordinals of corresponding table template columns.
+<cref>TBD</cref> other contexts?
+        </t>
+        <t>
+When translating object references into text form and code point lookup tables are available, any enumerated item <bcp14>SHOULD</bcp14> be converted to its text name.
+When translating object references from text form and code point lookup tables are available, any enumerated item <bcp14>SHOULD</bcp14> be converted from its text name.
+The conversion between AMM object-type text name and integer enumeration requires a lookup table based on the registrations in <xref target="tab-iana-dtnma-object-types"/>.
+The conversion between text name and integer enumeration for either organization ID, model ID, or object ID require lookup tables based on ADMs and ODMs known to the processing entity.
+        </t>
+        <t>
+ID segment translation <bcp14>SHALL</bcp14> apply recursively to any nested values in literal containers or in object reference parameters.
+        </t>
+      </section>
+      <section anchor="sec-proc-paramkey">
+        <name>Parameter Key Translation</name>
+        <t>
+Both the text and binary form of the ARI allow object reference parameters to be structured as either a list or a map.
+When parameters are present as a map the map keys can be either text name or an integer ordinal of a formal parameter.
+Parameter map can be translated one-for-one between the two forms without loss.
+        </t>
+        <t>
+When translating object reference parameter maps into text form and code point lookup tables are available, any integer map key <bcp14>SHOULD</bcp14> be converted to its text name.
+When translating object reference parameter maps from text form and code point lookup tables are available, any integer map key <bcp14>SHOULD</bcp14> be converted from its text name.
+The conversion between text name and integer ordinal for parameter map keys require lookup tables based on formal parameters within ADMs and ODMs known to the processing entity.
+        </t>
+        <t>
+Parameter key translation <bcp14>SHALL</bcp14> apply recursively to any nested values in literal containers or in object reference parameters.
+        </t>
+      </section>
+      <section anchor="sec-proc-resolve">
+        <name>Relative Reference Resolution</name>
+        <t>
+Resolving an ARI containing a relative reference (where an object reference namespace is elided) <bcp14>SHALL</bcp14> consist of replacing the namespace component with the namespace of the resolving context.
+Relative reference resolution <bcp14>SHALL</bcp14> apply recursively to any nested values in literal containers or in object reference parameters.
+        </t>
+        <t>
+Because relative references can only exist in a specific named context (<em>e.g.</em>, an ADM module), resolution occurs at the point of decoding and extracting ARI values from that context.
+The AMM <xref target="I-D.ietf-dtn-amm"/> gives more specifics of how and when resolution is handled by an ARI user.
+        </t>
+      </section>
+    </section>
+    <section anchor="sec-transcoding">
+      <name>Transcoding Considerations</name>
+      <t>
+When translating literal values into text form, it is necessary to canonicalize the CBOR extended diagnostic notation of the item.
+The following applies to generating text form from CBOR items:
+      </t>
+      <ul>
+        <li>Only the outermost value <bcp14>SHALL</bcp14> contain the "ari:" scheme prefix. This applies to cases of either literal container types or object reference parameter values.</li>
+        <li>The canonical presentation form of CBOR <tt>null</tt> and <tt>bool</tt> values <bcp14>SHALL</bcp14> be the names identified in <xref section="8" target="RFC8949"/>.</li>
+        <li>The canonical presentation form of CBOR <tt>int</tt> and <tt>float</tt> values <bcp14>SHALL</bcp14> be the decimal encoding defined in <xref section="8" target="RFC8949"/>.</li>
+        <li>The canonical presentation form of CBOR <tt>tstr</tt> values <bcp14>SHALL</bcp14> be the definite-length, non-concatenated encoding defined in <xref section="8" target="RFC8949"/>.</li>
+        <li>The canonical presentation form of CBOR <tt>bstr</tt> values <bcp14>SHALL</bcp14> be the definite-length, base16 ("h" prefix), non-concatenated encoding defined in <xref section="8" target="RFC8949"/>.</li>
+        <li>The canonical presentation form for literal type <tt>TP</tt> values <bcp14>SHALL</bcp14> be the human-friendly <tt>date-time</tt> encoding.</li>
+        <li>The canonical presentation form for literal type <tt>TD</tt> values <bcp14>SHALL</bcp14> be the human-friendly <tt>duration</tt> encoding.</li>
+        <li>When canonical presentation form for literal type <tt>CBOR</tt> values <bcp14>SHALL</bcp14> be the embedded CBOR  encoding defined in <xref section="G.3" target="RFC8610"/>.</li>
+      </ul>
+    </section>
+    <section>
+      <name>Interoperability Considerations</name>
+      <t>
+DTN challenged networks might interface with better resourced networks that are managed using non-DTN management protocols.
+When this occurs, the federated network architecture might need to define management gateways that translate between DTN and non-DTN management approaches.
+      </t>
+      <aside>
+        <t>
+NOTE: It is also possible for DTN management be used end-to-end because this approach can also operate in less challenged networks.
+The opposite is not true; non-DTN management approaches should not be assumed to work in DTN challenged networks.
+      </t>
+      </aside>
+      <t>
+Where possible, ARIs should be translatable to other, non-DTN management naming schemes. 
+This translation might not be one-to-one, as the features of the AMM and/or specific ADM may differ from features in other management architectures.
+Therefore, it is unlikely that a single naming scheme can be used for both DTN and non-DTN management.
+      </t>
+      <section>
+        <name>ARI Type Support</name>
+        <t>
+As recommended in <xref section="3.2.5" target="I-D.ietf-dtn-amm"/>, an implementation can make use of the private and experimental reserved code points for <xref target="tab-iana-dtnma-literal-types">Literal Types</xref> and <xref target="tab-iana-dtnma-object-types">Reference Types</xref>.
+In practice this requires all receivers of these ARIs to implement those private use built-in types so causes a high barrier to interoperability.
+Private use types are discouraged when the application need can be handled using a combination of well-known built-in types and semantic type definitions in some data model implemented on the Agent(s) and known to the Manager(s).
+        </t>
+      </section>
+      <section>
+        <name>ARI Transport</name>
+        <t>
+It is expected that the principal form of exchange between Manager and Agent uses the purpose-built message form defined in <xref target="I-D.ietf-dtn-amp"/>.
+Beyond that principal interface there are likely to be more implementation-specific or ad-hoc mechanisms used to transport ARIs.
+Some of these could be between a Manager and its application(s) or between an Agent and its application(s).
+This section contains several interoperable recommendations for how to transport ARIs as encoded data between these entities.
+        </t>
+        <dl>
+          <dt>URI List:</dt>
+          <dd>
+            <t>
+This transport form uses text form ARIs separated as text lines following an existing file format.
+This form of encoding <bcp14>SHOULD</bcp14> be referred to by applications as the "uri" form.
+            </t>
+            <t>
+When using this form, each ARI value <bcp14>SHALL</bcp14> be URI-encoded in accordance with <xref target="sec-text-form"/>, using the "ari:" scheme prefix to make it a proper non-reference URI, and appended by a CRLF line ending.
+Because of the restricted character set of encoded URIs, implementations <bcp14>MAY</bcp14> be more lax about decoding other line endings and still be interoperable.
+The encoded text <bcp14>MAY</bcp14> include non-URI comment lines as defined in <xref section="5" target="RFC2483"/>.
+            </t>
+            <t>
+When transporting this form using a mechanism that supports media type identification, the type "text/uri-list" <bcp14>SHOULD</bcp14> be used.
+            </t>
+          </dd>
+          <dt>CBOR Sequence:</dt>
+          <dd>
+            <t>
+This transport form uses binary form ARIs concatenated together into a single octet sequence.
+This form of encoding <bcp14>SHOULD</bcp14> be referred to by applications as the "cbor" form.
+            </t>
+            <t>
+When using this form, each ARI value <bcp14>SHALL</bcp14> be CBOR-encoded in accordance with <xref target="sec-binary-form"/> and concatenated together into a CBOR sequence as defined in <xref target="RFC8742"/>.
+No other special considerations are needed for this form.
+            </t>
+            <t>
+When transporting this form using a mechanism that supports media type identification, the type "application/cbor-seq" <bcp14>SHOULD</bcp14> be used.
+When transporting a single ARI value, the type "application/cbor" <bcp14>MAY</bcp14> be used instead to indicate the single encoded item.
+            </t>
+          </dd>
+          <dt>CBOR Hexadecimal List:</dt>
+          <dd>
+            <t>
+This transport form uses binary form ARIs which are then base16 encoded and separated as text lines.
+This form of encoding <bcp14>SHOULD</bcp14> be referred to by applications as the "cborhex" form.
+            </t>
+            <t>
+When using this form, each ARI value <bcp14>SHALL</bcp14> be CBOR-encoded in accordance with <xref target="sec-binary-form"/>, then base16 encoded in accordance with <xref section="8" target="RFC4648"/>, and appended by a CRLF line ending.
+Each base16 encoded line <bcp14>MAY</bcp14> be prefixed by "0x" to disambiguate this form from the other two defined in this document.
+            </t>
+            <t>
+If the transport mechanism supports media type identification, the type "text/plain" <bcp14>SHOULD</bcp14> be used.
+            </t>
+          </dd>
+        </dl>
+        <t>
+The above are simply recommendations for better interoperability using existing, well-known media types.
+Implementations can use any additional media types at their own discretion.
+        </t>
+        <aside>
+          <t>
+The URI List form and CBOR hexadecimal list form are equivalent to the how the examples in this document are presented.
+The CBOR hexadecimal list, when the "0x" prefix is not used, is also compatible with tools such as <eref target="https://cbor.me"/> and similar command-line converters.</t>
+        </aside>
+      </section>
+    </section>
+    <section>
+      <name>Security Considerations</name>
+      <t>
+        Because ADM and ODM namespaces are defined by any entity, no security or permission meaning can be inferred simply from the expression of namespace.
+      </t>
+    </section>
+    <section anchor="sec-iana">
+      <name>IANA Considerations</name>
+      <t>
+        This section provides guidance to the Internet Assigned Numbers Authority (IANA) regarding registration of schema and namespaces related to ARIs, in accordance with BCP 26 <xref target="RFC8126"/>.
+      </t>
+      <section anchor="sec-iana-scheme">
+        <name>URI Schemes Registry</name>
+        <t>
+          This document defines a new URI scheme "ari" in <xref target="sec-text-form"/>.
+          A new entry has been added to the "URI Schemes" registry <xref target="IANA-URI"/> with the following parameters.
+        </t>
+        <dl newline="true">
+          <dt>Scheme name:</dt>
+          <dd>ari</dd>
+          <dt>Status:</dt>
+          <dd>Permanent</dd>
+          <dt>Applications/protocols that use this scheme name:</dt>
+          <dd>The scheme is used by DTNMA Managers and Agents to identify managed objects.</dd>
+          <dt>Contact:</dt>
+          <dd>IETF Chair &lt;chair@ietf.org&gt;</dd>
+          <dt>Change controller:</dt>
+          <dd>IETF &lt;ietf@ietf.org&gt;</dd>
+          <dt>Reference:</dt>
+          <dd><xref target="sec-text-form"/> of [This document].</dd>
+        </dl>
+      </section>
+      <section anchor="sec-iana-dtnma">
+        <name>DTN Management Architecture</name>
+        <t>
+This document defines several new registries within a new "DTN Management Architecture" registry group.
+        </t>
+        <t>
+This document defines a new registry "DTNMA Literal Types" within the "DTN Management Architecture" registry group <xref target="IANA-DTNMA"/> containing initial entries from <xref target="tab-iana-dtnma-literal-types"/>.
+Enumerations in this registry <bcp14>SHALL</bcp14> be non-negative integers representable as CBOR <tt>uint</tt> type with an argument shorter than 4-bytes.
+Names in this registry <bcp14>SHALL</bcp14> be unique among all entries in this and the "DTNMA Object Types" registry.
+The registration procedure for this registry is Specification Required.
+        </t>
+        <table anchor="tab-iana-dtnma-literal-types">
+          <name>DTNMA Literal Types</name>
+          <thead>
+            <tr>
+              <th>Enumeration</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <em>0</em>
+              </td>
+              <td>
+                <tt>NULL</tt>
+              </td>
+              <td>The singleton <tt>null</tt> value.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>1</em>
+              </td>
+              <td>
+                <tt>BOOL</tt>
+              </td>
+              <td>A native boolean <tt>true</tt> or <tt>false</tt> value.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>2</em>
+              </td>
+              <td>
+                <tt>BYTE</tt>
+              </td>
+              <td>
+                <t>An 8-bit unsigned integer.</t>
+                <t>The valid domain is 0 to 2^8-1 inclusive.</t>
+              </td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>4</em>
+              </td>
+              <td>
+                <tt>INT</tt>
+              </td>
+              <td>
+                <t>A 32-bit signed integer.</t>
+                <t>The valid domain is -2^31 to 2^31-1 inclusive</t>
+              </td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>5</em>
+              </td>
+              <td>
+                <tt>UINT</tt>
+              </td>
+              <td>
+                <t>A 32-bit unsigned integer.</t>
+                <t>The valid domain is 0 to 2^32-1 inclusive</t>
+              </td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>6</em>
+              </td>
+              <td>
+                <tt>VAST</tt>
+              </td>
+              <td>
+                <t>A 64-bit signed integer.</t>
+                <t>The valid domain is -2^63 to 2^63-1 inclusive</t>
+              </td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>7</em>
+              </td>
+              <td>
+                <tt>UVAST</tt>
+              </td>
+              <td>
+                <t>A 64-bit unsigned integer.</t>
+                <t>The valid domain is 0 to 2^64-1 inclusive</t>
+              </td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>8</em>
+              </td>
+              <td>
+                <tt>REAL32</tt>
+              </td>
+              <td>A 32-bit <xref target="IEEE.754-2019"/> floating point number.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>9</em>
+              </td>
+              <td>
+                <tt>REAL64</tt>
+              </td>
+              <td>A 64-bit <xref target="IEEE.754-2019"/> floating point number.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>10</em>
+              </td>
+              <td>
+                <tt>TEXTSTR</tt>
+              </td>
+              <td>A text string composed of (unicode) characters in accordance with <xref target="RFC3629"/>.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>11</em>
+              </td>
+              <td>
+                <tt>BYTESTR</tt>
+              </td>
+              <td>A byte string composed of 8-bit values.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>12</em>
+              </td>
+              <td>
+                <tt>TP</tt>
+              </td>
+              <td>An absolute time point (TP) in the DTN Epoch of <xref section="4.2.6" target="RFC9171"/>.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>13</em>
+              </td>
+              <td>
+                <tt>TD</tt>
+              </td>
+              <td>A relative time difference (TD) with a sign.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>14</em>
+              </td>
+              <td>
+                <tt>LABEL</tt>
+              </td>
+              <td>An integer or text primitive representing a substitution context value. This is only valid in a parameterized object reference or other cases which use a substitution context (<em>e.g.</em> a filter expression).</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>15</em>
+              </td>
+              <td>
+                <tt>CBOR</tt>
+              </td>
+              <td>A byte string containing an encoded CBOR item. The structure is opaque to the Agent but guaranteed well-formed for the ADM using it.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>16</em>
+              </td>
+              <td>
+                <tt>ARITYPE</tt>
+              </td>
+              <td>An integer or text value representing one of the code points in this DTNMA Literal Types registry or the DTNMA Object Types registry.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>17</em>
+              </td>
+              <td>
+                <tt>AC</tt>
+              </td>
+              <td>An array containing an ordered list of ARIs.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>18</em>
+              </td>
+              <td>
+                <tt>AM</tt>
+              </td>
+              <td>A map containing keys of primitive ARIs and values of ARIs.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>19</em>
+              </td>
+              <td>
+                <tt>TBL</tt>
+              </td>
+              <td>A two-dimensional table containing cells of ARIs.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>20</em>
+              </td>
+              <td>
+                <tt>EXECSET</tt>
+              </td>
+              <td>A structure containing values to be executed by an Agent.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>21</em>
+              </td>
+              <td>
+                <tt>RPTSET</tt>
+              </td>
+              <td>A structure containing reports of values sampled from an Agent.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>22 to 254</td>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+              <td/>
+            </tr>
+            <tr>
+              <td>
+                <em>255</em>
+              </td>
+              <td>
+                <tt>LITERAL</tt>
+              </td>
+              <td>A reserved type name for the union of all possible literal types.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>256 to 64383</td>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+              <td/>
+            </tr>
+            <tr>
+              <td>64384 to 64511</td>
+              <td/>
+              <td>Reserved for experimental use</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>64512 to 65535</td>
+              <td/>
+              <td>Reserved for private use</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>65536 to 2147483647</td>
+              <td/>
+              <td>Reserved for future use</td>
+              <td>[This document]</td>
+            </tr>
+          </tbody>
+        </table>
+        <t>
+This document defines a new registry "DTNMA Object Types" within the "DTN Management Architecture" registry group <xref target="IANA-DTNMA"/> containing initial entries from <xref target="tab-iana-dtnma-object-types"/>.
+Enumerations in this registry <bcp14>SHALL</bcp14> be negative integers representable as CBOR <tt>nint</tt> type with an argument shorter than 4-bytes.
+Names in this registry <bcp14>SHALL</bcp14> be unique among all entries in this and the "DTNMA Literal Types" registry.
+The registration procedure for this registry is Specification Required.
+        </t>
+        <table anchor="tab-iana-dtnma-object-types">
+          <name>DTNMA Object Types</name>
+          <thead>
+            <tr>
+              <th>Enumeration</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <em>-1</em>
+              </td>
+              <td>
+                <tt>IDENT</tt>
+              </td>
+              <td>Identity Object</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-2</em>
+              </td>
+              <td>
+                <tt>CONST</tt>
+              </td>
+              <td>Constant</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-3</em>
+              </td>
+              <td>
+                <tt>CTRL</tt>
+              </td>
+              <td>Control</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-4</em>
+              </td>
+              <td>
+                <tt>EDD</tt>
+              </td>
+              <td>Externally Defined Data</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-6</em>
+              </td>
+              <td>
+                <tt>OPER</tt>
+              </td>
+              <td>Operator</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-8</em>
+              </td>
+              <td>
+                <tt>SBR</tt>
+              </td>
+              <td>State-Based Rule</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-10</em>
+              </td>
+              <td>
+                <tt>TBR</tt>
+              </td>
+              <td>Time-Based Rule</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-11</em>
+              </td>
+              <td>
+                <tt>VAR</tt>
+              </td>
+              <td>Variable</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-12</em>
+              </td>
+              <td>
+                <tt>TYPEDEF</tt>
+              </td>
+              <td>Named semantic type</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>-13 to -254</td>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+              <td/>
+            </tr>
+            <tr>
+              <td>
+                <em>-255</em>
+              </td>
+              <td>
+                <tt>NAMESPACE</tt>
+              </td>
+              <td>A reserved type name for any namespace reference.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>
+                <em>-256</em>
+              </td>
+              <td>
+                <tt>OBJECT</tt>
+              </td>
+              <td>A reserved type name for the union of all possible object reference types.</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>-257 to -64384</td>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+              <td/>
+            </tr>
+            <tr>
+              <td>-64385 to -64512</td>
+              <td/>
+              <td>Reserved for experimental use</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>-64513 to -65536</td>
+              <td/>
+              <td>Reserved for private use</td>
+              <td>[This document]</td>
+            </tr>
+            <tr>
+              <td>-65537 to -2147483648</td>
+              <td/>
+              <td>Reserved for future use</td>
+              <td>[This document]</td>
+            </tr>
+          </tbody>
+        </table>
+        <t>
+IANA has annotated the "DTNMA Literal Types" and "DTNMA Object Types" registries with the following note:
+        </t>
+        <blockquote>
+The enumeration and name of all entries managed by IANA are unique across both the "DTNMA Literal Types" and "DTNMA Object Types" registries.
+        </blockquote>
+        <t>
+This document defines a new registry "DTNMA Organizations" within the "DTN Management Architecture" registry group <xref target="IANA-DTNMA"/> containing initial entries from <xref target="tab-iana-dtnma-orgs"/>.
+Enumerations in this registry are 32-bit signed integers.
+Names in this registry are text containing only lower-case alphabetic and numeric characters, a subset of the <tt>id-text</tt> ABNF rule.
+The registration procedures for this registry are indicated in <xref target="tab-iana-dtnma-orgs-reg"/>.
+        </t>
+        <table anchor="tab-iana-dtnma-orgs-reg">
+          <name>DTNMA Organizations Registration Procedures</name>
+          <thead>
+            <tr>
+              <th>Enumeration Range</th>
+              <th>Registration Procedure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-2147483648 to 0</td>
+              <td>Reserved</td>
+            </tr>
+            <tr>
+              <td>1 to 65535</td>
+              <td>Expert Review</td>
+            </tr>
+            <tr>
+              <td>65536 to 2147483647</td>
+              <td>First Come First Served</td>
+            </tr>
+          </tbody>
+        </table>
+        <t>
+The expert review range of this registry covers the values which have smaller encoding in binary form (all 3 octets or fewer).
+Experts are encouraged to be biased towards approving registrations unless they are abusive, frivolous, duplicative, or actively harmful (not merely of dubious value).
+Registrants are encouraged to use the first-come-first-served range if a large number of organizations are needed by one registrant.
+        </t>
+        <table anchor="tab-iana-dtnma-orgs">
+          <name>DTNMA Organizations</name>
+          <thead>
+            <tr>
+              <th>Enumeration</th>
+              <th>Name</th>
+              <th>Contact</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-2147483648 to -2147483777</td>
+              <td></td>
+              <td></td>
+              <td>Reserved for Experimental Use</td>
+            </tr>
+            <tr>
+              <td>-2147483776 to -1</td>
+              <td></td>
+              <td></td>
+              <td>Reserved for Private Use</td>
+            </tr>
+            <tr>
+              <td>0</td>
+              <td></td>
+              <td></td>
+              <td>Reserved</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>ietf</td>
+              <td>IETF Chair &lt;chair@ietf.org&gt;</td>
+              <td>All IETF standardized models will use this organization</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>iana</td>
+              <td>IETF Chair &lt;chair@ietf.org&gt;</td>
+              <td>All IANA registry models will use this organization</td>
+            </tr>
+            <tr>
+              <td>3 to 65534</td>
+              <td/>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+            </tr>
+            <tr>
+              <td>65535</td>
+              <td>example</td>
+              <td>IETF Chair &lt;chair@ietf.org&gt;</td>
+              <td>Reserved for example ADMs</td>
+            </tr>
+            <tr>
+              <td>65536 to 2147483647</td>
+              <td/>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <t>
+This document defines a new registry "DTNMA IETF Data Models" within the "DTN Management Architecture" registry group <xref target="IANA-DTNMA"/> containing initial entries from <xref target="tab-iana-dtnma-ietf-adms"/>.
+The purpose of this registry is to hold models defined by IETF published documents.
+All of the ADMs in this registry are under the "ietf" organization (enumeration 1) from <xref target="tab-iana-dtnma-orgs"/>.
+Enumerations in this registry are 32-bit signed integers.
+The registration procedure for this registry is standards action because these models are managed by the IETF.
+        </t>
+        <table anchor="tab-iana-dtnma-ietf-adms">
+          <name>DTNMA IETF Data Models</name>
+          <thead>
+            <tr>
+              <th>Enumeration</th>
+              <th>Name</th>
+              <th>Reference</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-2147483648 to -1</td>
+              <td></td>
+              <td></td>
+              <td>Reserved for ODMs</td>
+            </tr>
+            <tr>
+              <td>0 to 2147483647</td>
+              <td/>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <t>
+This document defines a new registry "DTNMA IANA Data Models" within the "DTN Management Architecture" registry group <xref target="IANA-DTNMA"/> containing initial entries from <xref target="tab-iana-dtnma-ietf-adms"/>.
+The purpose of this registry is to hold models containing object definitions which are purely ADM-defined, and involve no runtime variability, such as IDENT and TYPEDEF objects.
+All of the ADMs in this registry are under the "iana" organization (enumeration 2) from <xref target="tab-iana-dtnma-orgs"/>.
+Enumerations in this registry are 32-bit signed integers.
+The registration procedure for this registry is standards action because these models are managed by IANA.
+        </t>
+        <table anchor="tab-iana-dtnma-iana-adms">
+          <name>DTNMA IANA Data Models</name>
+          <thead>
+            <tr>
+              <th>Enumeration</th>
+              <th>Name</th>
+              <th>Reference</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-2147483648 to -1</td>
+              <td></td>
+              <td></td>
+              <td>Reserved for ODMs</td>
+            </tr>
+            <tr>
+              <td>0 to 2147483647</td>
+              <td/>
+              <td/>
+              <td>
+                <em>Unassigned</em>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </middle>
+  <back>
+    <displayreference target="IEEE.754-2019" to="IEEE754"/>
+    <references>
+      <name>References</name>
+      <references>
+        <name>Normative References</name>
+        <reference anchor="IANA-DTNMA" target="https://www.iana.org/assignments/TBA/">
+          <front>
+            <title>Delay-Tolerant Networking Management Architecture (DTNMA) Parameters</title>
+            <author>
+              <organization>IANA</organization>
+            </author>
+            <date/>
+          </front>
+        </reference>
+        <reference anchor="IANA-URI" target="https://www.iana.org/assignments/uri-schemes/">
+          <front>
+            <title>Uniform Resource Identifier (URI) Schemes</title>
+            <author>
+              <organization>IANA</organization>
+            </author>
+            <date/>
+          </front>
+        </reference>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml-misc/reference.IEEE.754-2019.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2483.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3339.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3629.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3986.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4648.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5234.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7595.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8259.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8742.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8943.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8949.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.9171.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-dtn-amm.xml"/>
+      </references>
+      <references>
+        <name>Informative References</name>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml-misc/reference.IEEE.1003.1-2024.xml"/>
+        <reference anchor="ISO.9899-1999" target="https://www.iso.org/standard/29237.html">
+          <front>
+            <title>Programming Languages -- C</title>
+            <author>
+              <organization>ISO</organization>
+              <address>
+                <uri>https://www.iso.org/</uri>
+              </address>
+            </author>
+            <date month="12" year="1999"/>
+          </front>
+          <seriesInfo name="ISO/IEC" value="9899:1999"/>
+        </reference>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4838.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7320.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7942.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8126.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8610.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8792.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8820.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.9675.xml"/>
+        <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-dtn-amp.xml"/>
+        <reference anchor="github-dtnma-ace" target="https://github.com/JHUAPL-DTNMA/dtnma-ace">
+          <front>
+            <title>The DTNMA AMM CODEC Engine (ACE)</title>
+            <author>
+              <organization abbrev="JHU/APL">The Johns Hopkins University Applied Physics Laboratory</organization>
+            </author>
+            <date/>
+          </front>
+        </reference>
+        <reference anchor="github-dtnma-tools" target="https://github.com/JHUAPL-DTNMA/dtnma-tools">
+          <front>
+            <title>A reference implementation of the DTN Management Architecture (DTNMA) Agent and related Tools</title>
+            <author>
+              <organization abbrev="JHU/APL">The Johns Hopkins University Applied Physics Laboratory</organization>
+            </author>
+            <date/>
+          </front>
+        </reference>
+      </references>
+    </references>
+    <section>
+      <name>Example Equivalences</name>
+      <t>
+This section contains examples of converting between text name and integer enumeration of ARI components and converting between text form and binary form of entire ARIs.
+The examples in this section rely on the ADM and ODM definitions in <xref target="tab-ex-models"/> under the well-known "example" organization from <xref target="tab-iana-dtnma-orgs"/> and a private use organization "!private" with an enumeration -40.
+      </t>
+      <table anchor="tab-ex-models">
+        <name>Example ADMs</name>
+        <thead>
+          <tr>
+            <th>Organization Name</th>
+            <th>Model Enumeration</th>
+            <th>Model Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>example</td>
+            <td>1</td>
+            <td>adm-a</td>
+          </tr>
+          <tr>
+            <td>example</td>
+            <td>2</td>
+            <td>adm-b</td>
+          </tr>
+          <tr>
+            <td>example</td>
+            <td>-10</td>
+            <td>!odm10</td>
+          </tr>
+          <tr>
+            <td>!private</td>
+            <td>30</td>
+            <td>adm-a</td>
+          </tr>
+        </tbody>
+      </table>
+      <t>
+        Given those namespaces, the example objects are listed in <xref target="tab-ex-objects"/> where the Namespace column uses the ARI text form convention.
+      </t>
+      <table anchor="tab-ex-objects">
+        <name>Example Objects</name>
+        <thead>
+          <tr>
+            <th>Organization Name</th>
+            <th>Model Name</th>
+            <th>Object Type</th>
+            <th>Enumeration</th>
+            <th>Name</th>
+            <th>Signature</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>example</td>
+            <td>adm-a</td>
+            <td>EDD</td>
+            <td>3</td>
+            <td>num-bytes</td>
+            <td>()</td>
+          </tr>
+          <tr>
+            <td>example</td>
+            <td>adm-a</td>
+            <td>CTRL</td>
+            <td>2</td>
+            <td>do-thing</td>
+            <td>(AC targets, UINT count)</td>
+          </tr>
+          <tr>
+            <td>example</td>
+            <td>adm-a</td>
+            <td>CONST</td>
+            <td>1</td>
+            <td>rptt-with-param</td>
+            <td>(ARI var, TEXTSTR text)</td>
+          </tr>
+          <tr>
+            <td>example</td>
+            <td>adm-a</td>
+            <td>TYPEDEF</td>
+            <td>1</td>
+            <td>distance</td>
+            <td>()</td>
+          </tr>
+          <tr>
+            <td>example</td>
+            <td>!odm10</td>
+            <td>VAR</td>
+            <td>2</td>
+            <td>threshold</td>
+            <td>()</td>
+          </tr>
+          <tr>
+            <td>!private</td>
+            <td>adm-a</td>
+            <td>VAR</td>
+            <td>1</td>
+            <td>my-counter</td>
+            <td>()</td>
+          </tr>
+        </tbody>
+      </table>
+      <t>
+The TYPEDEF <tt>distance</tt> is defined to be an augmented use of <tt>uint</tt> with scale of 1.0 and unit of meter.
+      </t>
+      <t>
+        Each of the following examples illustrate the comparison of ARI forms in different situations, covering the gamut of what can be expressed by an ARI.
+      </t>
+      <section>
+        <name>Primitive-Typed Literal</name>
+        <t>
+          This is the literal value 4 interpreted as a 32-bit unsigned integer.
+          The ARI text (which is identical to its percent-encoded form) is:
+        </t>
+        <sourcecode type="uri">ari:/UINT/4</sourcecode>
+        <t>
+          which is translated to enumerated form:
+        </t>
+        <sourcecode type="uri">ari:/5/4</sourcecode>
+        <t>
+          and converted to CBOR item:
+        </t>
+        <sourcecode type="cbor">[5, 4]</sourcecode>
+        <t>
+          and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x820504</sourcecode>
+      </section>
+      <section>
+        <name>Timestamp Literal</name>
+        <t>
+          This is the timestamp "2000-01-01T00:16:40Z" which is DTN Epoch plus 1000 seconds.
+          The ARI text (which is identical to its percent-encoded form) is:
+        </t>
+        <sourcecode type="uri">ari:/TP/20000101T001640Z</sourcecode>
+        <t>
+          which is translated to enumerated form:
+        </t>
+        <sourcecode type="uri">ari:/12/1000</sourcecode>
+        <t>
+          and converted to CBOR item:
+        </t>
+        <sourcecode type="cbor">[12, 1000]</sourcecode>
+        <t>
+          and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x820c1a000f4240</sourcecode>
+      </section>
+      <section>
+        <name>Semantic-Typed Literal</name>
+        <t>
+          This is the literal value 20 interpreted as a semantic type <tt>distance</tt> from <tt>adm-a</tt>.
+          The ARI text (which is identical to its percent-encoded form) is:
+        </t>
+        <sourcecode type="uri">ari://example/adm-a/TYPEDEF/distance(20)</sourcecode>
+        <t>
+          which is translated to enumerated form:
+        </t>
+        <sourcecode type="uri">ari://65535/1/-12/1(20)</sourcecode>
+        <t>
+          and converted to CBOR item:
+        </t>
+        <sourcecode type="cbor">[65535, 1, -12, 1, [20]]</sourcecode>
+        <t>
+          and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x8519FFFF012B018114</sourcecode>
+      </section>
+      <section>
+        <name>Complex CBOR Literal</name>
+        <t>
+          This is a literal value embedding a complex CBOR structure.
+          The CBOR diagnostic expression being encoded is
+        </t>
+        <sourcecode>&lt;&lt;{"test": [3, 4.5]}&gt;&gt;</sourcecode>
+        <t>
+          The embedded item can be CBOR-encoded to a byte string and percent-encoded, along with a translated type enumeration of:
+        </t>
+        <sourcecode type="uri">ari:/15/h'A164746573748203F94480'</sourcecode>
+        <t>
+          and converted to CBOR item (note the byte string is no longer text-encoded):
+        </t>
+        <sourcecode type="cbor">[15, h'A164746573748203F94480']</sourcecode>
+        <t>
+          and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x820F4BA164746573748203F94480</sourcecode>
+      </section>
+      <section>
+        <name>Non-parameterized Object Reference</name>
+        <t>
+          This is a non-parameterized <tt>num-bytes</tt> object in the ADM namespace.
+          The ARI text (which is identical to its percent-encoded form) is:
+        </t>
+        <sourcecode type="uri">ari://example/adm-a/edd/num-bytes</sourcecode>
+        <t>
+          which is translated to enumerated form:
+        </t>
+        <sourcecode type="uri">ari://65535/1/-4/3</sourcecode>
+        <t>
+          and converted to CBOR item:
+        </t>
+        <sourcecode type="cbor">[65535, 1, -4, 3]</sourcecode>
+        <t>
+          and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x831A000100002303</sourcecode>
+      </section>
+      <section>
+        <name>Parameterized Object Reference</name>
+        <t>
+This is an parameterized <tt>do-thing</tt> object in the ADM namespace.
+Additionally, the parameters include two relative-path relative references to other objects in the same ADM, which are resolved after text-decoding (see <xref target="sec-proc-resolve"/>).
+The ARI text (which is identical to its percent-encoded form) is:
+        </t>
+        <sourcecode type="uri">
+ari://example/adm-a/ctrl/do-thing(/AC/(\
+    ./edd/num-bytes,\
+    ../!odm10/var/threshold,\
+    //!private/adm-a/var/my-counter\
+),3)
+</sourcecode>
+        <t>
+which is translated to enumerated and resolved form:
+        </t>
+        <sourcecode type="uri">
+ari://65535/1/-3/2(/17/(\
+    //65535/1/-4/3,\
+    //65535/-10/-11/2,\
+    //-40/30/-11/1\
+),3)
+        </sourcecode>
+        <t>
+and converted to CBOR item:
+        </t>
+        <sourcecode type="cbor">
+[65535, 1, -3, 2, [
+  [17, [
+    [65535, 1, -4, 3],
+    [65535, -10, -11, 2],
+    [-40, 30, -11, 1]
+  ]],
+  3
+]]
+        </sourcecode>
+        <t>
+and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x8519FFFF012202828211838419FFFF0123038419FFFF292A02843827181E2A0103</sourcecode>
+      </section>
+      <section>
+        <name>Recursive Structure with Percent Encodings</name>
+        <t>
+This is a complex example having nested ARIs, some with percent-encoding needed.
+The human-friendly (but not valid URI) text for this case is:
+        </t>
+        <sourcecode>ari://example/adm-a/rptt/rptt-with-param("text")</sourcecode>
+        <t>
+which is percent encoded to the real URI:
+        </t>
+        <sourcecode type="uri">ari://example/adm-a/rptt/rptt-with-param(%22text%22)</sourcecode>
+        <t>
+which is translated to enumerated form:
+        </t>
+        <sourcecode type="uri">ari://65535/1/-7/1(%22text%22)</sourcecode>
+        <t>
+and converted to CBOR item:
+        </t>
+        <sourcecode type="cbor">[65535, 1, -7, 1, ["text"]]</sourcecode>
+        <t>
+and finally to the binary string of:
+        </t>
+        <sourcecode type="cborhex">0x8519FFFF012601816474657874</sourcecode>
+      </section>
+      <section>
+        <name>Full EXECSET and RPTSET with all ARI variations</name>
+        <t>
+This section contains fully valid EXECSET and RPTSET
+        </t>
+        <sourcecode anchor="ex-full-execset-uri" type="uri">
+ari:/EXECSET/n=1234;(\
+  //65535/1/CTRL/12(\
+    undefined,\
+    null,\
+    true,\
+    false,\
+    10,\
+    -10,\
+    1e+06,\
+    hi,\
+    %22%24%21%22,\
+    h'6869'\
+  ),\
+  //65535/1/CTRL/123(\
+    /NULL/null,\
+    /BOOL/true,\
+    /BOOL/false,\
+    /BYTE/10,\
+    /INT/-1000,\
+    /UINT/1000,\
+    /VAST/-1000000,\
+    /UVAST/1000000,\
+    /REAL32/1e+10,\
+    /REAL64/1e+20,\
+    /REAL64/NaN,\
+    /REAL64/Infinity,\
+    /REAL64/-Infinity,\
+    /TEXTSTR/hi,\
+    /TEXTSTR/%22%24%21%22,\
+    /BYTESTR/'hi',\
+    /BYTESTR/h'6869',\
+    /BYTESTR/b64'aGk',\
+    /TP/20250624T120000.3Z,\
+    /TP/804081600.3,\
+    /TD/PT1H0.05S,\
+    /TD/3600.05,\
+    /LABEL/name,\
+    /LABEL/1234,\
+    /CBOR/h'187B',\
+    /ARITYPE/UINT,\
+    /OBJPAT/(65535)(..-1,1)(*)(10..100),\
+    /OBJPAT/(*)(*)(*)(*),\
+    /AC/(2,4),\
+    /AM/(1=2,3=4),\
+    /TBL/c=2;(1,2)(3,4)\
+  ),\
+  //65535/1/CTRL/1234(\
+    0=//65535/2/IDENT/12,\
+    1=//65535/2/TYPEDEF/21\
+  )\
+)
+        </sourcecode>
+        <t>
+This has the following CBOR
+        </t>
+        <sourcecode anchor="ex-full-execset-cbor" type="cbor">
+[
+  20,
+  [
+    1234,
+    [65535, 1, -3, 12, [
+      undefined,
+      null,
+      true,
+      false,
+      10,
+      -10,
+      1e6,
+      "hi",
+      "$.?!' \t@+:",
+      'hi'
+    ]],
+    [65535, 1, -3, 123, [
+      [0, null],
+      [1, true],
+      [1, false],
+      [2, 10],
+      [4, -1000],
+      [5, 1000],
+      [6, -1000000],
+      [7, 1000000],
+      [8, 1e10],
+      [9, 1e20],
+      [9, NaN],
+      [9, Infinity],
+      [9, -Infinity],
+      [10, "hi"],
+      [10, "$.?!' \t@+:"],
+      [11, 'hi'],
+      [11, 'hi'],
+      [11, 'hi'],
+      [12, [-1, 8040816003]],
+      [12, [-1, 8040816003]],
+      [13, [-2, 360005]],
+      [13, [-2, 360005]],
+      [14, "name"],
+      [14, 1234],
+      [15, &lt;&lt;123&gt;&gt;],
+      [16, 5],
+      [24, [65535, [null,2147483648,0,0], true, [10,90]]],
+      [24, [true, true, true, true]],
+      [17, [2, 4]],
+      [18, {1: 2, 3: 4}],
+      [19, [2, 1,2, 3,4]]
+    ]],
+    [65535, 1, -3, 1234, {
+      0: [65535, 2, -1, 12],
+      1: [65535, 2, -12, 21]
+    }]
+  ]
+]
+        </sourcecode>
+        <sourcecode anchor="ex-full-rptset-uri" type="uri">
+ari:/RPTSET/n=1234;r=/TP/20250624T120000Z;(\
+  t=/TD/PT;s=//65535/1/CTRL/54(2,1);(\
+    undefined,\
+    null,\
+    true,\
+    false,\
+    10,\
+    -10,\
+    1e+06,\
+    hi,\
+    %22%24%21%22,\
+    h'6869'\
+  ),\
+  t=/TD/PT1.234S;s=//65535/1/CTRL/543(2=1);(\
+    /NULL/null,\
+    /BOOL/true,\
+    /BOOL/false,\
+    /BYTE/10,\
+    /INT/-1000,\
+    /UINT/1000,\
+    /VAST/-1000000,\
+    /UVAST/1000000,\
+    /REAL32/1e+10,\
+    /REAL64/1e+20,\
+    /REAL64/NaN,\
+    /REAL64/Infinity,\
+    /REAL64/-Infinity,\
+    /TEXTSTR/hi,\
+    /TEXTSTR/%22%24%21%22,\
+    /BYTESTR/'hi',\
+    /BYTESTR/h'6869',\
+    /BYTESTR/b64'aGk',\
+    /TP/20250624T120000.3Z,\
+    /TP/804081600.3,\
+    /TD/PT1H0.05S,\
+    /TD/3600.05,\
+    /LABEL/name,\
+    /LABEL/1234,\
+    /CBOR/h'187B',\
+    /ARITYPE/UINT,\
+    /AC/(2,4),\
+    /AM/(1=2,3=4),\
+    /TBL/c=2;(1,2)(3,4)\
+  )\
+)
+        </sourcecode>
+        <sourcecode anchor="ex-full-rptset-cbor" type="cbor">
+[
+  21,
+  [
+    1234,
+    804081600,
+    [
+      0,
+      [65535, 1, -3, 54, [2, 1]],
+      undefined,
+      null,
+      true,
+      false,
+      10,
+      -10,
+      1e6,
+      "hi",
+      "$.?!' \t@+:",
+      'hi'
+    ],
+    [
+      [-3, 1234],
+      [65535, 1, -3, 543, {2: 1}],
+      [0, null],
+      [1, true],
+      [1, false],
+      [2, 10],
+      [4, -1000],
+      [5, 1000],
+      [6, -1000000],
+      [7, 1000000],
+      [8, 1e10],
+      [9, 1e20],
+      [9, NaN],
+      [9, Infinity],
+      [9, -Infinity],
+      [10, "hi"],
+      [10, "$.?!' \t@+:"],
+      [11, 'hi'],
+      [11, 'hi'],
+      [11, 'hi'],
+      [12, [-1, 8040816003]],
+      [12, [-1, 8040816003]],
+      [13, [-2, 360005]],
+      [13, [-2, 360005]],
+      [14, "name"],
+      [14, 1234],
+      [15, &lt;&lt;123&gt;&gt;],
+      [16, 5],
+      [17, [2, 4]],
+      [18, {1: 2, 3: 4}],
+      [19, [2, 1,2, 3,4]]
+    ]
+  ]
+]
+        </sourcecode>
+      </section>
+    </section>
+    <section>
+      <name>Implementation Guidance</name>
+      <t>
+When implementing text-form ARI decoding as a token lexer and LR(1) parser, such as POSIX <tt>lex</tt> and <tt>yacc</tt> tools <xref target="IEEE.1003.1-2024"/>, there are some techniques that can avoid pitfalls.
+      </t>
+      <t>
+One is to use the generic <tt>val-seg</tt> rule from <xref target="sec-uri-enc"/> as the pattern to match any URI path segment.
+This requires multi-phase processing in many cases, where the <tt>val-seg</tt> rule matches the segment which is then percent-decoded and primitive or context-specific rules are then used to decode the segment further.
+While the use of percent encoding is discouraged when unnecessary, and for many ARI values will be unnecessary, the generic URI syntax still allows for percent encoding of segments and a robust ARI decoder needs to handle that.
+      </t>
+      <t>
+To avoid lexer ambiguities related to recursive ARI structures (which are present in containers and parameters), it is best to combine the entire object identifier of an Object Reference into a single token consisting of slash-separated <tt>val-seg</tt> segments.
+When the lexer uses capture length to perform tie-breaking between multiple rules that match an input text this will cause the object identifier rule to be preferred over Literal value rules (will which always contain fewer path segments).
+      </t>
+      <t>
+When handling literal values, the text encodings defined in this document agree in many cases with text encodings provided by the C language starting with C99 <xref target="ISO.9899-1999"/> for the following uses.
+      </t>
+      <dl>
+        <dt>Signed Integer:</dt>
+        <dd>This agrees with the <tt>printf()</tt> format <tt>%lld</tt> and the parsing function <tt>strtoll()</tt>. Signed hexadecimals must be encoded with the sign separately.</dd>
+        <dt>Unsigned Integer:</dt>
+        <dd>This agrees with the <tt>printf()</tt> format <tt>%llu</tt> and <tt>%llx</tt>and the parsing function <tt>strtoull()</tt>.</dd>
+        <dt>Floating Point:</dt>
+        <dd>This agrees with the <tt>printf()</tt> formats <tt>%e</tt> <tt>%f</tt> <tt>%g</tt> and <tt>%a</tt> and the parsing function <tt>strtod()</tt>. This includes parsing of non-finite values but encoders might need to handle those values specially.</dd>
+        <dt>Decimal Fractions:</dt>
+        <dd>These are used for <tt>TP</tt> and <tt>TD</tt> types. The sign, integer portion, and fractional portion can each be handled as separate components, with the latter two using unsigned integer codecs (see above).</dd>
+        <dt>Absolute Times:</dt>
+        <dd>This is used only for the <tt>TP</tt> type. The integer portion is are compatible with the <tt>strftime()</tt> and <tt>strptime()</tt> formats of <tt>%Y%m%dT%H%M%S</tt>, with the output having the "Z" zone suffix appended and the input being stripped of optional "-" and ":" delimiters. The fractional portion can be handled the same as for decimal fractions (above).</dd>
+        <dt>Relative Times:</dt>
+        <dd>This is used only for the <tt>TD</tt> type. There is no direct handling of text form time duration but each separate component can be handled as an unsigned decimal integer or decimal fraction (see above).</dd>
+      </dl>
+    </section>
+    <section numbered="false" removeInRFC="true">
+      <name>Implementation Status</name>
+      <t>
+[NOTE to the RFC Editor: please remove this section before publication, as well as the reference to <xref target="RFC7942"/>, <xref target="github-dtnma-ace"/>, and <xref target="github-dtnma-tools"/>.]
+      </t>
+      <t>
+This section records the status of known implementations of the
+protocol defined by this specification at the time of posting of
+this Internet-Draft, and is based on a proposal described in
+<xref target="RFC7942"/>.
+The description of implementations in this section is
+intended to assist the IETF in its decision processes in progressing
+drafts to RFCs. Please note that the listing of any individual
+implementation here does not imply endorsement by the IETF.
+Furthermore, no effort has been spent to verify the information
+presented here that was supplied by IETF contributors. This is not
+intended as, and must not be construed to be, a catalog of available
+implementations or their features. Readers are advised to note that
+other implementations can exist.
+      </t>
+      <t>
+A full implementation in Python language of the ARI encoding and decoding requirements for both text URI and binary CBOR forms, and for translating between text name and integer enumeration (based on ADM contents) is present in the source repository <xref target="github-dtnma-ace"/>.
+This repository includes unit test vectors for verifying ARI encoding and decoding.
+      </t>
+      <t>
+A full implementation in C11 language of the ARI encoding and decoding requirements for both text URI and binary CBOR forms is present in the source repository <xref target="github-dtnma-tools"/>.
+This repository includes unit test vectors for verifying ARI encoding and decoding.
+It also has built-item (executable) testing which interoperates the Python ACE library with REFDA and REFDM executables.
+      </t>
+    </section>
+    <section numbered="false" toc="include">
+      <name>Acknowledgments</name>
+      <t>
+Thanks to Justin Ethier of the Johns Hopkins University Applied Physics Laboratory for review and implementation testing of ARI encoder/decoder (CODEC) software.
+      </t>
+    </section>
+  </back>
+</rfc>
